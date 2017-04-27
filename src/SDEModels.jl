@@ -1,5 +1,9 @@
 module SDEModels
 
-# package code goes here
+include("base.jl")
+include("codegen.jl")
+include("models.jl")
+
+export @sde_model, dim, drift, diffusion
 
 end # module
