@@ -15,7 +15,7 @@ function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars)
   end
 end
 
-function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex::Expr)
+function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
   replacements = Dict{Any,Any}(0 => 0.0)
   if length(model_vars) == 1
     push!(replacements, first(model_vars) => :x)
