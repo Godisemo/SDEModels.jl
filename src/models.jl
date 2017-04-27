@@ -1,6 +1,8 @@
 
 @sde_model BlackScholes dS = r*S*dt + σ*S*dW
 
+@sde_model OrnsteinUhlenbeck dx = θ*(μ-x)*dt + σ*dW
+
 @sde_model CoxIngersollRoss dr = κ*(θ-r)*dt + σ*√r*dW
 
 @sde_model FitzHughNagumo begin
