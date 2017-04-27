@@ -42,10 +42,13 @@ macro sde_model(typename::Symbol, ex::Expr)
   vars = union(symbols.(equations)...)
   model_vars = OrderedDict(model_variable.(equations))
   process_vars = OrderedDict(union(process_variable.(equations)...))
-  parameter_vars = setdiff(vars, OrderedSet(union([:dt], keys(model_vars), values(model_vars), keys(process_vars), values(process_vars))))
   differentials = union(keys(model_vars), keys(process_vars), [:dt])
   drift_equations = [differential_expression(e.args[2], :dt, differentials) for e in equations]
   diffusion_equations = [differential_expression(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
+
+  drift_parameter_vars = setdiff(union(symbols.(drift_equations)...), values(model_vars))
+  diffusion_parameter_vars = setdiff(union(symbols.(diffusion_equations)...), values(model_vars))
+  parameter_vars = union(drift_parameter_vars, diffusion_parameter_vars)
 
   blk = Expr(:block)
   append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars).args)
