@@ -39,53 +39,43 @@ macro sde_model(typename::Symbol, ex::Expr)
     throw("Expression must be block or assignment $(ex.head)")
   end
 
-  vars = union(symbols.(equations)...)
-  model_vars = OrderedDict(model_variable.(equations))
-  process_vars = OrderedDict(union(process_variable.(equations)...))
-  differentials = union(keys(model_vars), keys(process_vars), [:dt])
-  drift_equations = [differential_expression(e.args[2], :dt, differentials) for e in equations]
-  diffusion_equations = [differential_expression(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
-
-  drift_parameter_vars = setdiff(union(symbols.(drift_equations)...), values(model_vars))
-  diffusion_parameter_vars = setdiff(union(symbols.(diffusion_equations)...), values(model_vars))
-  parameter_vars = union(drift_parameter_vars, diffusion_parameter_vars)
+  model_vars = foldl(merge!, [matchdict(r"(?<=^d).*", e.args[1]) for e in equations])
+  time_vars = OrderedDict([:dt => :t])
+  process_vars = foldl(merge!, [matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations])
+  differentials = union(keys(time_vars), keys(process_vars))
+  drift = cat_expressions([factor_extract(e.args[2], :dt, differentials) for e in equations])
+  diffusion = cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
+  parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), values(model_vars))
 
   blk = Expr(:block)
   append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars).args)
-  append!(blk.args, sde_function(typename, :drift, values(model_vars), parameter_vars, cat_expressions(drift_equations)).args)
-  append!(blk.args, sde_function(typename, :diffusion, values(model_vars), parameter_vars, cat_expressions(diffusion_equations)).args)
+  append!(blk.args, sde_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
+  append!(blk.args, sde_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   blk
-end
-
-# =================================
-# specific codegen helper functions
-# =================================
-
-function differential_expression(ex, target::Symbol, differentials)
-  replacements = Dict(s => 0 for s in differentials)
-  replacements[target] = 1
-  simplify(replace_symbols(ex, replacements))
-end
-
-function differential_variable(sym::Symbol)
-  str = string(sym)
-  startswith(str, "d") ? sym => Symbol(str[2:end]) : nothing
-end
-
-function model_variable(ex::Expr)
-  ex.head == :(=) ? differential_variable(ex.args[1]) : nothing
-end
-
-function process_variable(ex::Expr)
-  if ex.head == :(=)
-    f = s -> startswith(lowercase(string(s)), "dw")
-    map(differential_variable, filter(f, symbols(ex.args[2])))
-  end
 end
 
 # ================================
 # generic codegen helper functions
 # ================================
+
+function matchdict(r::Regex, ex)
+  syms = symbols(ex)
+  dict = OrderedDict()
+  for sym in syms
+    str = string(sym)
+    m = match(r, str)
+    if m != nothing
+      push!(dict, sym => Symbol(m.match))
+    end
+  end
+  dict
+end
+
+function factor_extract(ex, one_sym::Symbol, zero_syms)
+  replacements = Dict(s => 0 for s in zero_syms)
+  replacements[one_sym] = 1
+  simplify(replace_symbols(ex, replacements))
+end
 
 cat_expressions{T}(x::Array{T,1}) =
   length(x) == 1 ? x[1] : Expr(:vect, x...)
