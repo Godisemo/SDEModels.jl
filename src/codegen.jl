@@ -16,7 +16,7 @@ function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars)
 end
 
 function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
-  replacements = Dict{Any,Any}(0 => 0.0)
+  replacements = Dict()
   if length(model_vars) == 1
     push!(replacements, first(model_vars) => :x)
   else
@@ -74,7 +74,8 @@ end
 function factor_extract(ex, one_sym::Symbol, zero_syms)
   replacements = Dict(s => 0 for s in zero_syms)
   replacements[one_sym] = 1
-  simplify(replace_symbols(ex, replacements))
+  factor = simplify(replace_symbols(ex, replacements))
+  isa(factor, Number) ? Float64(factor) : factor
 end
 
 cat_expressions{T}(x::Array{T,1}) =
