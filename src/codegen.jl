@@ -39,9 +39,9 @@ macro sde_model(typename::Symbol, ex::Expr)
     throw("Expression must be block or assignment $(ex.head)")
   end
 
-  model_vars = foldl(merge!, [matchdict(r"(?<=^d).*", e.args[1]) for e in equations])
+  model_vars = foldl(merge!, matchdict(r"(?<=^d).*", e.args[1]) for e in equations)
   time_vars = OrderedDict([:dt => :t])
-  process_vars = foldl(merge!, [matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations])
+  process_vars = foldl(merge!, matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations)
   differentials = union(keys(time_vars), keys(process_vars))
   drift = cat_expressions([factor_extract(e.args[2], :dt, differentials) for e in equations])
   diffusion = cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
