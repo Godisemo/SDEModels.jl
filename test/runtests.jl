@@ -57,5 +57,7 @@ end
   @test size(simulate(m1, EulerMaruyama(0.01), 100.0, 1000)) == (1,1000)
   @test size(simulate(m1, Milstein(0.01), 100.0, 1000)) == (1,1000)
   @test size(simulate(m2, EulerMaruyama(0.01), [100.0, 0.4], 500)) == (2,500)
+  @test sample(Deterministic(), EulerMaruyama(1), 1) ≈ 2
   @test simulate(deterministic, EulerMaruyama(1.0), 1.0, 5) ≈ [2 4 8 16 32]
+  @test_approx_eq_eps simulate(Deterministic(), EulerMaruyama(1), 1, 1; substeps=10000000)[] e 1e-6
 end
