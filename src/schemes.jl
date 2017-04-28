@@ -10,15 +10,18 @@ immutable Milstein <: AbstractScheme
   Δt::Float64
 end
 
+wiener{D}(::AbstractSDE{D,1}, Δt) = sqrt(Δt) * randn()
+wiener{D,M}(::AbstractSDE{D,M}, Δt) = sqrt(Δt) * randn(M)
+
 function sample{D,M}(model::AbstractSDE{D,M}, scheme::EulerMaruyama, x)
-  Δw = sqrt(scheme.Δt) * randn(M)
+  Δw = wiener(model, scheme.Δt)
   μ = drift(model, x)
   σ = diffusion(model, x)
   x + μ * scheme.Δt + σ * Δw
 end
 
 function sample{D,M}(model::AbstractSDE{D,M}, scheme::Milstein, x)
-  Δw = sqrt(scheme.Δt) * randn(M)
+  Δw = wiener(model, scheme.Δt)
   μ = drift(model, x)
   # computes the drift and diffusion at the same time efficiently using dual numbers
   σ∂σ = diffusion(model, ForwardDiff.Dual(x, one(x)))

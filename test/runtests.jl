@@ -41,3 +41,9 @@ end
   @test diffusion(m2, [100.0, 0.4]) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
   @test diffusion(m3, [0.1, 0.2, 0.3]) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
 end
+
+@testset "simulation" begin
+  @test size(simulate(m1, EulerMaruyama(0.01), 100.0, 1000)) == (1,1000)
+  @test size(simulate(m1, Milstein(0.01), 100.0, 1000)) == (1,1000)
+  @test size(simulate(m2, EulerMaruyama(0.01), [100.0, 0.4], 500)) == (2,500)
+end
