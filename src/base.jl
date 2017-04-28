@@ -13,9 +13,11 @@ function Base.show(io::IO, model::AbstractSDE)
   name = typeof(model)
   n = nfields(model)
   parameters = fieldnames(model)
-  w = maximum(length.(string.(fieldnames(model))))
   println("$name with $n parameters:")
-  for p in parameters
-    println("  $(rpad(p, w)) => $(getfield(model, p))")
+  if length(parameters) > 0
+    w = maximum(length.(string.(fieldnames(model))))
+    for p in parameters
+      println("  $(rpad(p, w)) => $(getfield(model, p))")
+    end
   end
 end
