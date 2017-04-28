@@ -80,7 +80,6 @@ cat_expressions{T}(x::Array{T,2}) =
 
 replace_symbols(ex, dict) = replace_symbols!(copy(ex), dict)
 replace_symbols(sym::Symbol, dict) = replace_symbols!(sym, dict)
-replace_symbols!(ex, pair::Pair) = replace_symbols!(ex, Dict(pair))
 replace_symbols!(ex, dict::Associative) = haskey(dict, ex) ? dict[ex] : ex
 function replace_symbols!(ex::Expr, dict::Associative)
   for i in 1:length(ex.args)
