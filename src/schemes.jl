@@ -10,6 +10,7 @@ immutable Milstein <: AbstractScheme
   Δt::Float64
 end
 
+wiener{D}(::AbstractSDE{D,0}, Δt) = 0.0
 wiener{D}(::AbstractSDE{D,1}, Δt) = sqrt(Δt) * randn()
 wiener{D,M}(::AbstractSDE{D,M}, Δt) = sqrt(Δt) * randn(M)
 

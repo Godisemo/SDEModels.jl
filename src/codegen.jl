@@ -38,7 +38,8 @@ macro sde_model(typename::Symbol, ex::Expr)
   process_vars = foldl(merge!, matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations)
   differentials = union(keys(time_vars), keys(process_vars))
   drift = cat_expressions([factor_extract(e.args[2], :dt, differentials) for e in equations])
-  diffusion = cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
+  diffusion = length(process_vars) == 0 ? 0.0 :
+    cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
   parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), values(model_vars))
 
   blk = Expr(:block)
