@@ -22,13 +22,13 @@ function step(model::AbstractSDE, ::EulerMaruyama, x, Δt, Δw)
   x + μ * Δt + σ * Δw
 end
 
-function step(model::AbstractSDE, ::Milstein, x, Δt, Δw)
+function step{M}(model::AbstractSDE{1,M}, ::Milstein, x, Δt, Δw)
   μ = drift(model, x)
   # computes the drift and diffusion at the same time efficiently using dual numbers
   σ∂σ = diffusion(model, ForwardDiff.Dual(x, one(x)))
   σ = ForwardDiff.value(σ∂σ)
   ∂σ, = ForwardDiff.partials(σ∂σ)
-  x + μ * Δt + σ * Δw + σ * ∂σ * (Δw.^2 - Δt) / 2
+  x + μ * Δt + σ * Δw + σ * ∂σ * (Δw^2 - Δt) / 2
 end
 
 simulate{D,M}(model::AbstractSDE{D,M}, scheme, x0, N; substeps=1) =
