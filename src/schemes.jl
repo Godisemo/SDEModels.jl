@@ -31,10 +31,11 @@ function sample{D,M}(model::AbstractSDE{D,M}, scheme::Milstein, x)
   x + μ * scheme.Δt + σ * Δw + σ * ∂σ * (Δw.^2 - scheme.Δt) / 2
 end
 
-simulate{D,M}(model::AbstractSDE{D,M}, scheme, x0, N) = simulate!(Array(Float64, D, N), model, scheme, x0, N)
-function simulate!{D,M}(x::AbstractArray, model::AbstractSDE{D,M}, scheme::AbstractScheme, x0, N)
+simulate{D,M}(model::AbstractSDE{D,M}, scheme, x0, N) =
+  simulate!(Array(Float64, D, N), model, scheme, x0)
+function simulate!(x, model::AbstractSDE, scheme::AbstractScheme, x0)
   xprev = x0
-  for i in 1:N
+  for i in 1:size(x, 2)
     xprev = x[:,i] = sample(model, scheme, xprev)
   end
   x
