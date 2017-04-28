@@ -20,8 +20,11 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
   merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
-  signature = :($(esc(:(SDEModels.$functionname)))(model::$(esc(typename)), x))
-  Expr(:block, Expr(:function, signature, replace_symbols(ex, replacements)))
+  quote
+    function $(esc(:(SDEModels.$functionname))){T}(model::$(esc(typename)), x::T)
+      convert(promote_type(Float64,T), $(replace_symbols(ex, replacements)))
+    end
+  end
 end
 
 macro sde_model(typename::Symbol, ex::Expr)
