@@ -14,8 +14,6 @@ wiener{D}(::AbstractSDE{D,0}, Δt) = 0.0
 wiener{D}(::AbstractSDE{D,1}, Δt) = sqrt(Δt) * randn()
 wiener{D,M}(::AbstractSDE{D,M}, Δt) = sqrt(Δt) * randn(M)
 
-# sample(model::AbstractSDE, scheme::AbstractScheme, x) = step(model, scheme, x, scheme.Δt, wiener(model, scheme.Δt))
-
 function step(model::AbstractSDE, ::EulerMaruyama, x, Δt, Δw)
   μ = drift(model, x)
   σ = diffusion(model, x)
@@ -39,4 +37,13 @@ function simulate!(x, model::AbstractSDE, scheme::AbstractScheme, x0; substeps=1
     xprev = x[:,i] = sample(model, scheme, xprev; substeps=substeps)
   end
   x
+end
+
+function sample(model::AbstractSDE, scheme::AbstractScheme, x0; substeps=1)
+  δt = scheme.Δt / substeps
+  xprev = x0
+  for i in 1:substeps
+    xprev = step(model, scheme, xprev, δt, wiener(model, δt))
+  end
+  xprev
 end
