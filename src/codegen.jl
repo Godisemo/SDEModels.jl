@@ -5,8 +5,9 @@ import DataStructures: OrderedSet, OrderedDict
 # main codegen functions and macros
 # =================================
 
-function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars)
+function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars, docstring)
   quote
+    @doc $docstring ->
     immutable $typename <: SDEModels.AbstractSDE{$d,$m}
       $([:($p::Float64) for p in parameter_vars]...)
     end
@@ -15,6 +16,7 @@ function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars)
 end
 
 function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
+  docstring = "$typename: $ex"
   replacements = Dict()
   if length(model_vars) == 1
     push!(replacements, first(model_vars) => :x)
@@ -24,6 +26,7 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
   merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
   ex = replace_symbols(ex, replacements)
   quote
+    @doc $docstring ->
     function (SDEModels.$functionname){T}(model::$typename, x::T)
       convert(promote_type(Float64,T), $ex)
     end
@@ -48,8 +51,19 @@ function sde_model(typename::Symbol, ex::Expr)
     cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
   parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), values(model_vars))
 
+  docstring = """
+    Model variables: $(join(values(model_vars), ", "))
+
+    Process variables: $(join(values(process_vars), ", "))
+
+    Parameter variables: $(join(parameter_vars, ", "))
+
+    Definition:
+
+    $(join(string.(equations), "\n\n"))
+  """
   blk = Expr(:block)
-  append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars).args)
+  append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars, docstring).args)
   append!(blk.args, sde_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
   append!(blk.args, sde_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   blk
