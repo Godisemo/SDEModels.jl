@@ -1,16 +1,19 @@
 import Calculus: simplify
 import DataStructures: OrderedSet, OrderedDict
+import Parameters: with_kw
 
 # =================================
 # main codegen functions and macros
 # =================================
 
 function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars, docstring)
+  block = Expr(:block, [:($p::Float64) for p in parameter_vars]...)
+  typedef =  Expr(:type, false, :($typename <: SDEModels.AbstractSDE{$d,$m}), block)
+  if length(parameter_vars) > 0
+     typedef = with_kw(typedef)
+  end
   quote
-    @doc $docstring ->
-    immutable $typename <: SDEModels.AbstractSDE{$d,$m}
-      $([:($p::Float64) for p in parameter_vars]...)
-    end
+    @doc $docstring -> $typedef
     export $typename
   end
 end
