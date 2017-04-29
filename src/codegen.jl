@@ -6,10 +6,12 @@ import DataStructures: OrderedSet, OrderedDict
 # =================================
 
 function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars)
-  signature = :($typename <: AbstractSDE{$d,$m})
-  block = Expr(:block)
-  append!(block.args, esc(:($p::Float64)) for p in parameter_vars)
-  Expr(:block, Expr(:export, typename), Expr(:type, false, signature, block))
+  quote
+    immutable $typename <: SDEModels.AbstractSDE{$d,$m}
+      $([:($p::Float64) for p in parameter_vars]...)
+    end
+    export $typename
+  end
 end
 
 function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
@@ -20,20 +22,21 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
   merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  ex = replace_symbols(ex, replacements)
   quote
-    function $(esc(:(SDEModels.$functionname))){T}(model::$(esc(typename)), x::T)
-      convert(promote_type(Float64,T), $(replace_symbols(ex, replacements)))
+    function (SDEModels.$functionname){T}(model::$typename, x::T)
+      convert(promote_type(Float64,T), $ex)
     end
   end
 end
 
-macro sde_model(typename::Symbol, ex::Expr)
+function sde_model(typename::Symbol, ex::Expr)
   if ex.head == :block
     equations = filter(e -> e.head == :(=), ex.args)
   elseif ex.head == :(=)
     equations = [ex]
   else
-    throw("Expression must be block or assignment $(ex.head)")
+    error("Expression must be block or assignment $(ex.head)")
   end
 
   model_vars = foldl(merge!, matchdict(r"(?<=^d).*", e.args[1]) for e in equations)
@@ -50,6 +53,10 @@ macro sde_model(typename::Symbol, ex::Expr)
   append!(blk.args, sde_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
   append!(blk.args, sde_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   blk
+end
+
+macro sde_model(typename, ex)
+  esc(sde_model(typename, ex))
 end
 
 # ================================
