@@ -19,7 +19,7 @@ simulate{D}(model::AbstractSDE{D}, scheme, x0, nsteps) =
 simulate{D}(model::AbstractSDE{D}, scheme, x0, nsteps, npaths) =
   simulate!(Array(Float64, D, nsteps, npaths), model, scheme, x0)
 
-function simulate!(x::AbstractArray{TypeVar(:T),2}, model, scheme, x0)
+function simulate!{T}(x::AbstractArray{T,2}, model, scheme, x0)
   xprev = x0
   for i in 1:size(x, 2)
     x[:,i] = xprev = sample(model, scheme, xprev)
@@ -27,7 +27,7 @@ function simulate!(x::AbstractArray{TypeVar(:T),2}, model, scheme, x0)
   x
 end
 
-function simulate!(x::AbstractArray{TypeVar(:T),3}, model, scheme, x0)
+function simulate!{T}(x::AbstractArray{T,3}, model, scheme, x0)
   for i in 1:size(x, 3)
     simulate!(view(x, :, :,i), model, scheme, x0)
   end

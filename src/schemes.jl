@@ -9,9 +9,9 @@ typealias Milstein Scheme{:Milstein}
 
 subdivide{T}(scheme::Scheme{T}, nsubsteps) = Scheme{T}(scheme.Δt / nsubsteps)
 
-wiener(::AbstractSDE{TypeVar(:D),0}, scheme::Scheme) = 0.0
-wiener(::AbstractSDE{TypeVar(:D),1}, scheme::Scheme) = sqrt(scheme.Δt) * randn()
-wiener{M}(::AbstractSDE{TypeVar(:D),M}, scheme::Scheme) = sqrt(scheme.Δt) * randn(M)
+wiener{D}(::AbstractSDE{D,0}, scheme::Scheme) = 0.0
+wiener{D}(::AbstractSDE{D,1}, scheme::Scheme) = sqrt(scheme.Δt) * randn()
+wiener{D,M}(::AbstractSDE{D,M}, scheme::Scheme) = sqrt(scheme.Δt) * randn(M)
 
 function step(model::AbstractSDE, scheme::EulerMaruyama, x, Δw)
   μ = drift(model, x)
