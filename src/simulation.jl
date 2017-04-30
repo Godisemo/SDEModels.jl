@@ -1,8 +1,8 @@
 
 sample(model, scheme, x0) = step(model, scheme, x0, wiener(model, scheme))
 
-sample{D}(model::AbstractSDE{D}, scheme, x0, npaths) =
-  sample!(Array(Float64, D, npaths), model, scheme, x0)
+sample(model, scheme, x0, npaths) =
+  sample!(Array(Float64, model_dim(model), npaths), model, scheme, x0)
 
 function sample!(x, model, scheme, x0)
   for i in 1:size(x, 2)
@@ -13,11 +13,11 @@ end
 
 
 
-simulate{D}(model::AbstractSDE{D}, scheme, x0, nsteps) =
-  simulate!(Array(Float64, D, nsteps), model, scheme, x0)
+simulate(model, scheme, x0, nsteps) =
+  simulate!(Array(Float64, model_dim(model), nsteps), model, scheme, x0)
 
-simulate{D}(model::AbstractSDE{D}, scheme, x0, nsteps, npaths) =
-  simulate!(Array(Float64, D, nsteps, npaths), model, scheme, x0)
+simulate(model, scheme, x0, nsteps, npaths) =
+  simulate!(Array(Float64, model_dim(model), nsteps, npaths), model, scheme, x0)
 
 function simulate!{T}(x::AbstractArray{T,2}, model, scheme, x0)
   xprev = x0
