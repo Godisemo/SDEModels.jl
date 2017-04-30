@@ -61,5 +61,6 @@ end
   @test sample(Deterministic(), Milstein(1), 1) ≈ 2
   @test simulate(deterministic, EulerMaruyama(1.0), 1.0, 5) ≈ [2 4 8 16 32]
   @test simulate(deterministic, Milstein(1.0), 1.0, 5) ≈ [2 4 8 16 32]
-  @test_approx_eq_eps simulate(Deterministic(), EulerMaruyama(1), 1, 1; substeps=10000000)[] e 1e-6
+  @test_approx_eq_eps subsample(Deterministic(), EulerMaruyama(1), 1, 10000000) e 1e-6
+  # @test_approx_eq_eps simulate(Deterministic(), EulerMaruyama(1), 1, 1; substeps=10000000)[] e 1e-6
 end
