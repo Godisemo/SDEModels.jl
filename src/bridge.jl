@@ -1,27 +1,17 @@
-immutable ModifiedBridge
-  model::AbstractSDE
-  x1::Union{Array{Float64},Float64}
-  t1::Float64
+immutable ModifiedBridge <: AbstractScheme
+  Δt::Float64
+  state1::TimeDependentState
 end
 
-model_dim(bridge::ModifiedBridge) = model_dim(bridge.model)
+subdivide(scheme::ModifiedBridge, nsubsteps) = ModifiedBridge(scheme.Δt / nsubsteps, scheme.state1)
 
-function sample(bridge::ModifiedBridge, scheme::EulerMaruyama, x0)
-  xprev = x0
-  tprev = 0.0
-    μ = (bridge.x1 - xprev) / bridge.t1
-    σ = sqrt((bridge.t1 - scheme.Δt) / bridge.t1) * diffusion(bridge.model, xprev)
-    xprev + μ * scheme.Δt + σ * wiener(bridge.model, scheme)
-end
-
-function simulate!{T}(x::AbstractArray{T,2}, bridge::ModifiedBridge, scheme::EulerMaruyama, x0)
-  xprev = x0
-  tprev = 0.0
-  for i in 1:size(x, 2)
-    μ = (bridge.x1 - xprev) / (bridge.t1 - tprev)
-    σ = sqrt((bridge.t1 - (tprev + scheme.Δt)) / (bridge.t1 - tprev)) * diffusion(bridge.model, xprev)
-    x[:,i] = xprev = xprev + μ * scheme.Δt + σ * wiener(bridge.model, scheme)
-    tprev += scheme.Δt
-  end
-  x
+function _step(model, scheme::ModifiedBridge, state0::TimeDependentState, Δw)
+  x = statevalue(state0)
+  t = statetime(state0)
+  x1 = statevalue(scheme.state1)
+  t1 = statetime(scheme.state1)
+  # TODO numerical issues when subdividing
+  μ = (x1 - x) / (t1 - t)
+  σ = sqrt((t1 - (t + scheme.Δt)) / (t1 - t)) * diffusion(model, state0)
+  x + μ * scheme.Δt + σ * Δw
 end

@@ -35,17 +35,15 @@ fine(A::AbstractArray) = reshape([ fine(x) for x in A ], size(A))
 Base.show(io::IO, x::Multilevel) = show(io, (x.coarse, x.fine))
 
 
-
-function sample{T<:Multilevel}(model::AbstractSDE, scheme, xprev::Union{T,AbstractArray{T}}; nsubsteps=2)
-  @show nsubsteps
+function sample{T<:Multilevel}(model, scheme, state0::TimeDependentState{T}; nsubsteps=2)
   subscheme = subdivide(scheme, nsubsteps)
-  xcprev = coarse(xprev)
-  xfprev = fine(xprev)
+  xcprev = state(coarse(statevalue(state0)), statetime(state0))
+  xfprev = state(fine(statevalue(state0)), statetime(state0))
   Δw = 0.0
   for j in 1:nsubsteps
     Δw += δw = wiener(model, subscheme)
     xfprev = step(model, subscheme, xfprev, δw)
   end
   xcprev = step(model, scheme, xcprev, Δw)
-  multilevel(xcprev, xfprev)
+  state(multilevel(statevalue(xcprev), statevalue(xfprev)), statetime(xcprev))
 end
