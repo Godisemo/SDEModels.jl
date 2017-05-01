@@ -36,8 +36,8 @@ Base.show(io::IO, x::Multilevel) = show(io, (x.coarse, x.fine))
 
 
 
-function sample{T<:Multilevel}(model::AbstractSDE, scheme, xprev::Union{T,AbstractArray{T}})
-  nsubsteps = 2 # TODO figure out a nice way to give this as input
+function sample{T<:Multilevel}(model::AbstractSDE, scheme, xprev::Union{T,AbstractArray{T}}; nsubsteps=2)
+  @show nsubsteps
   subscheme = subdivide(scheme, nsubsteps)
   xcprev = coarse(xprev)
   xfprev = fine(xprev)
