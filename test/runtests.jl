@@ -19,12 +19,14 @@ end
 
 @sde_model Wiener dX = dW
 @sde_model Deterministic dX = X*dt
+@sde_model TimeDependent dX = t*a*X*dt + b*X*dW
 
 m1 = BlackScholes(0.01, 0.3)
 m2 = Heston(0.01, 10.0, 0.3, 0.1, 0.4)
 m3 = TestModel(1, 2, 3, 4, 5, 6)
 wiener = Wiener()
 deterministic = Deterministic()
+timedependend = TimeDependent(1, 2)
 
 @testset "model creation" begin
   @test fieldnames(m1) == [:r, :σ]
@@ -38,29 +40,32 @@ deterministic = Deterministic()
 end
 
 @testset "drift" begin
-  @test drift(m1, 100.0) ≈ 100.0 * 0.01
-  @test drift(m2, [100.0, 0.4]) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
-  @test drift(m3, [0.1, 0.2, 0.3]) ≈ [0.2*1, 0.3*2, 0.1*3]
-  @test drift(wiener, 100.0) ≈ 0.0
-  @test drift(deterministic, 100.0) ≈ 100.0
+  @test drift(m1, state(100.0)) ≈ 100.0 * 0.01
+  @test drift(m2, state([100.0, 0.4])) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
+  @test drift(m3, state([0.1, 0.2, 0.3])) ≈ [0.2*1, 0.3*2, 0.1*3]
+  @test drift(wiener, state(100.0)) ≈ 0.0
+  @test drift(deterministic, state(100.0)) ≈ 100.0
+  @test_throws Exception drift(timedependend, state(3.0))
+  @test drift(timedependend, state(3.0, 4.0)) ≈ 12
 end
 
 @testset "diffusion" begin
-  @test diffusion(m1, 100.0) ≈ 100.0 * 0.3
-  @test diffusion(m2, [100.0, 0.4]) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
-  @test diffusion(m3, [0.1, 0.2, 0.3]) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
-  @test diffusion(wiener, 100.0) ≈ 1.0
-  @test diffusion(deterministic, 100.0) ≈ 0.0
+  @test diffusion(m1, state(100.0)) ≈ 100.0 * 0.3
+  @test diffusion(m2, state([100.0, 0.4])) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
+  @test diffusion(m3, state([0.1, 0.2, 0.3])) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
+  @test diffusion(wiener, state(100.0)) ≈ 1.0
+  @test diffusion(deterministic, state(100.0)) ≈ 0.0
 end
 
 @testset "simulation" begin
-  @test size(simulate(m1, EulerMaruyama(0.01), 100.0, 1000)) == (1,1000)
-  @test size(simulate(m1, Milstein(0.01), 100.0, 1000)) == (1,1000)
-  @test size(simulate(m2, EulerMaruyama(0.01), [100.0, 0.4], 500)) == (2,500)
-  @test sample(Deterministic(), EulerMaruyama(1), 1) ≈ 2
-  @test sample(Deterministic(), Milstein(1), 1) ≈ 2
-  @test simulate(deterministic, EulerMaruyama(1.0), 1.0, 5) ≈ [2 4 8 16 32]
-  @test simulate(deterministic, Milstein(1.0), 1.0, 5) ≈ [2 4 8 16 32]
-  @test_approx_eq_eps subsample(Deterministic(), EulerMaruyama(1), 1, 10000000) e 1e-6
-  # @test_approx_eq_eps simulate(Deterministic(), EulerMaruyama(1), 1, 1; substeps=10000000)[] e 1e-6
+  @test size(simulate(m1, EulerMaruyama(0.01), state(100.0), 1000)) == (1000,)
+  @test size(simulate(m1, Milstein(0.01), state(100.0), 1000)) == (1000,)
+  @test size(simulate(m2, EulerMaruyama(0.01), state([100.0, 0.4]), 500)) == (500,)
+  @test statevalue(sample(Deterministic(), EulerMaruyama(1), state(1.0))) ≈ 2
+  @test statevalue(sample(Deterministic(), Milstein(1), state(1.0))) ≈ 2
+  @test statevalue(simulate(deterministic, EulerMaruyama(1.0), state(1.0), 5)) ≈ [2, 4, 8, 16, 32]
+  @test statevalue(simulate(deterministic, Milstein(1.0), state(1.0), 5)) ≈ [2, 4, 8, 16, 32]
+  x = subsample(Deterministic(), EulerMaruyama(1), state(1.0, 0.0), 10000000)
+  @test_approx_eq_eps statevalue(x) e 1e-6
+  @test statetime(x) ≈ 1.0
 end

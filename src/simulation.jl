@@ -1,46 +1,49 @@
+# TODO option to include startpoint
+# TODO move npaths and nsteps to key-value args
 
-sample(model, scheme, x0) = step(model, scheme, x0, wiener(model, scheme))
 
-sample(model, scheme, x0, npaths; args...) =
-  sample!(Array(eltype(x0), model_dim(model), npaths), model, scheme, x0; args...)
+sample(model, scheme, state0) = step(model, scheme, state0, wiener(model, scheme))
 
-function sample!(x, model, scheme, x0; args...)
+sample(model, scheme, state0, npaths; args...) =
+  sample!(Array(eltype(state0), npaths), model, scheme, state0; args...)
+
+function sample!(x, model, scheme, state0; args...)
+  for i in 1:length(x)
+    x[i] = sample(model, scheme, state0; args...)
+  end
+  x
+end
+
+
+
+simulate(model, scheme, state0, nsteps; args...) =
+  simulate!(Array(eltype(state0), nsteps), model, scheme, state0; args...)
+
+simulate(model, scheme, state0, nsteps, npaths; args...) =
+  simulate!(Array(eltype(state0), nsteps, npaths), model, scheme, state0; args...)
+
+function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; args...)
+  prevstate = state0
+  for i in 1:length(x)
+    x[i] = prevstate = sample(model, scheme, prevstate; args...)
+  end
+  x
+end
+
+function simulate!{T}(x::AbstractArray{T,2}, model, scheme, state0; args...)
   for i in 1:size(x, 2)
-    x[:,i] = sample(model, scheme, x0; args...)
+    simulate!(view(x, :, i), model, scheme, state0; args...)
   end
   x
 end
 
 
 
-simulate(model, scheme, x0, nsteps; args...) =
-  simulate!(Array(eltype(x0), model_dim(model), nsteps), model, scheme, x0; args...)
-
-simulate(model, scheme, x0, nsteps, npaths; args...) =
-  simulate!(Array(eltype(x0), model_dim(model), nsteps, npaths), model, scheme, x0; args...)
-
-function simulate!{T}(x::AbstractArray{T,2}, model::AbstractSDE, scheme, x0; args...)
-  xprev = x0
-  for i in 1:size(x, 2)
-    x[:,i] = xprev = sample(model, scheme, xprev; args...)
-  end
-  x
-end
-
-function simulate!{T}(x::AbstractArray{T,3}, model, scheme, x0; args...)
-  for i in 1:size(x, 3)
-    simulate!(view(x, :, :,i), model, scheme, x0; args...)
-  end
-  x
-end
-
-
-
-function subsample(model::AbstractSDE, scheme, x0, nsubsteps)
+function subsample(model::AbstractSDE, scheme, state0, nsubsteps)
   subscheme = subdivide(scheme, nsubsteps)
-  xprev = x0
+  prevstate = state0
   for i in 1:nsubsteps
-    xprev = sample(model, subscheme, xprev)
+    prevstate = sample(model, subscheme, prevstate)
   end
-  xprev
+  prevstate
 end

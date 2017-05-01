@@ -30,7 +30,9 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
   ex = replace_symbols(ex, replacements)
   quote
     @doc $docstring ->
-    function (SDEModels.$functionname){T}(model::$typename, x::T)
+    function (SDEModels.$functionname){S,T}(model::$typename, state::SDEModels.AbstractState{S,T})
+      x = statevalue(state)
+      t = statetime(state)
       convert(promote_type(Float64,T), $ex)
     end
   end
@@ -52,7 +54,7 @@ function sde_model(typename::Symbol, ex::Expr)
   drift = cat_expressions([factor_extract(e.args[2], :dt, differentials) for e in equations])
   diffusion = length(process_vars) == 0 ? 0.0 :
     cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
-  parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), values(model_vars))
+  parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
 
   docstring = """
     Model variables: $(join(values(model_vars), ", "))
