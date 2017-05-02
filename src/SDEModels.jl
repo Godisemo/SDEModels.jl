@@ -11,8 +11,9 @@ include("simulation.jl")
 include("bridge.jl")
 include("multilevel.jl")
 include("inference.jl")
+include("recipes.jl")
 
-export @sde_model, dim, drift, diffusion
+export @sde_model, dim, drift, diffusion, variables
 export ModifiedBridge, EulerMaruyama, Milstein, sample, sample!, simulate, simulate!, subsample
 export Multilevel, multilevel, coarse, fine
 export pdf, logpdf

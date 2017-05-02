@@ -18,7 +18,7 @@ function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars, do
   end
 end
 
-function sde_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
+function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
   docstring = "$typename: $ex"
   replacements = Dict()
   if length(model_vars) == 1
@@ -36,6 +36,14 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
       t = statetime(state)
       # TODO this will not work correctly when T<:AbstractArray and ex is trivial
       convert(promote_type(Float64,T), $ex)
+    end
+  end
+end
+
+function sde_model_function(typename::Symbol, functionname::Symbol, ex)
+  quote
+    function (SDEModels.$functionname)(::$typename)
+      $ex
     end
   end
 end
@@ -71,8 +79,9 @@ function sde_model(typename::Symbol, ex::Expr)
   """
   blk = Expr(:block)
   append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars, docstring).args)
-  append!(blk.args, sde_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
-  append!(blk.args, sde_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
+  append!(blk.args, sde_state_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
+  append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
+  append!(blk.args, sde_model_function(typename, :variables, :($(values(model_vars)...))).args)
   blk
 end
 

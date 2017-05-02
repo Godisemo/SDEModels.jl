@@ -45,3 +45,4 @@ Base.show(io::IO, s::TimeHomogeneousState) = show(io, s.x)
 
 drift{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("drift is not implemented for this model")
 diffusion{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("diffusion is not implemented for this model")
+variables(::AbstractSDE) = error("variables is not implemented for this model")
