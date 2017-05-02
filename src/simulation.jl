@@ -1,22 +1,30 @@
 sample(model, scheme, state0) = step(model, scheme, state0, wiener(model, scheme))
 
-sample(model, scheme, state0, npaths; args...) =
-  sample!(Array(eltype(state0), npaths), model, scheme, state0; args...)
+function sample(model, scheme, state0, nsteps; args...)
+  prevstate = state0
+  for i in 1:nsteps
+    prevstate = sample(model, scheme, prevstate; args...)
+  end
+  prevstate
+end
 
-function sample!(x, model, scheme, state0; args...)
+sample(model, scheme, state0, nsteps, npaths; args...) =
+  sample!(Array(eltype(state0), npaths), model, scheme, state0, nsteps; args...)
+
+function sample!{T}(x::AbstractArray{T,1}, model, scheme, state0, nsteps; args...)
   for i in 1:length(x)
-    x[i] = sample(model, scheme, state0; args...)
+    x[i] = sample(model, scheme, state0, nsteps; args...)
   end
   x
 end
 
 
 
-simulate(model, scheme, state0, nsteps; args...) =
-  simulate!(Array(eltype(state0), nsteps), model, scheme, state0; args...)
+simulate(model, scheme, state0, nsteps; includestart=false, args...) =
+  simulate!(Array(eltype(state0), nsteps + Int64(includestart)), model, scheme, state0; includestart=includestart, args...)
 
-simulate(model, scheme, state0, nsteps, npaths; args...) =
-  simulate!(Array(eltype(state0), nsteps, npaths), model, scheme, state0; args...)
+simulate(model, scheme, state0, nsteps, npaths; includestart=false, args...) =
+  simulate!(Array(eltype(state0), nsteps + Int64(includestart), npaths), model, scheme, state0; includestart=includestart, args...)
 
 function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; includestart=false, args...)
   x[1] = prevstate = state0
