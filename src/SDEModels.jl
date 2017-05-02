@@ -15,7 +15,7 @@ include("recipes.jl")
 
 export @sde_model, dim, drift, diffusion, variables
 export ModifiedBridge, EulerMaruyama, Milstein, sample, sample!, simulate, simulate!, subsample
-export Multilevel, multilevel, coarse, fine
+export multilevel, coarse, fine
 export pdf, logpdf
 
 end # module
