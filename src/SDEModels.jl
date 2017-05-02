@@ -1,6 +1,7 @@
 __precompile__()
 
 module SDEModels
+using StaticArrays
 
 include("base.jl")
 include("codegen.jl")

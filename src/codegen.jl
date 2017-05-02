@@ -30,9 +30,10 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
   ex = replace_symbols(ex, replacements)
   quote
     @doc $docstring ->
-    function (SDEModels.$functionname){S,T}(model::$typename, state::SDEModels.AbstractState{S,T})
+    function (SDEModels.$functionname){D,S,T}(model::$typename, state::SDEModels.AbstractState{D,S,T})
       x = statevalue(state)
       t = statetime(state)
+      # TODO this will not work correctly when T<:AbstractArray and ex is trivial
       convert(promote_type(Float64,T), $ex)
     end
   end
@@ -103,9 +104,10 @@ function factor_extract(ex, one_sym::Symbol, zero_syms)
 end
 
 cat_expressions{T}(x::Array{T,1}) =
-  length(x) == 1 ? x[1] : Expr(:vect, x...)
+  length(x) == 1 ? x[1] : :(StaticArrays.SVector{$(size(x)...)}($(x...)))
+
 cat_expressions{T}(x::Array{T,2}) =
-  length(x) == 1 ? x[1] : Expr(:vcat, mapslices(r -> Expr(:row, r...), x, 2)...)
+  length(x) == 1 ? x[1] : :(StaticArrays.SMatrix{$(size(x)...)}($(x...)))
 
 replace_symbols(ex, dict) = replace_symbols!(copy(ex), dict)
 replace_symbols(sym::Symbol, dict) = replace_symbols!(sym, dict)
