@@ -7,8 +7,8 @@ ex1 = :(dX = Y*a*dt + b*dW1 + dW2)
   @test collect(SDEModels.symbols(ex1)) == [:dX, :Y, :a, :dt, :b, :dW1, :dW2]
   SDEModels.replace_symbols!(ex1, Dict(:dX => :(sin(0)), :dt => :t))
   @test collect(SDEModels.symbols(ex1)) == [:Y, :a, :t, :b, :dW1, :dW2]
-  @test SDEModels.cat_expressions([:(a+b), :(c-d)]) == :([a+b,c-d])
-  @test SDEModels.cat_expressions([:(a+b) :(c-d); :e 1]) == :([a+b c-d; e 1])
+  @test SDEModels.cat_expressions([:(a+b), :(c-d)]) == :(StaticArrays.SVector{2}(a+b,c-d))
+  @test SDEModels.cat_expressions([:(a+b) :(c-d); :e 1]) == :(StaticArrays.SMatrix{2,2}(a+b, e, c-d, 1))
 end
 
 @sde_model TestModel begin

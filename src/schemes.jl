@@ -13,13 +13,13 @@ subdivide{T}(scheme::Scheme{T}, nsubsteps) = Scheme{T}(scheme.Δt / nsubsteps)
 
 wiener{D}(::AbstractSDE{D,0}, scheme::AbstractScheme) = 0.0
 wiener{D}(::AbstractSDE{D,1}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn()
-wiener{D,M}(::AbstractSDE{D,M}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn(M)
+wiener{D,M}(::AbstractSDE{D,M}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn(SVector{M})
 
 step(model, scheme, state0::TimeDependentState, Δw) =
-  state(_step(model, scheme, state0, Δw), statetime(state0) + scheme.Δt)
+  TimeDependentState(_step(model, scheme, state0, Δw), statetime(state0) + scheme.Δt)
 
 step(model, scheme, state0::TimeHomogeneousState, Δw) =
-  state(_step(model, scheme, state0, Δw))
+  TimeHomogeneousState(_step(model, scheme, state0, Δw))
 
 function _step(model::AbstractSDE, scheme::EulerMaruyama, current_state::AbstractState, Δw)
   μ = drift(model, current_state)
