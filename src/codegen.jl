@@ -27,10 +27,11 @@ function sde_function(typename::Symbol, functionname::Symbol, model_vars, parame
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
   merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  m = length(model_vars)
   ex = replace_symbols(ex, replacements)
   quote
     @doc $docstring ->
-    function (SDEModels.$functionname){D,S,T}(model::$typename, state::SDEModels.AbstractState{D,S,T})
+    function (SDEModels.$functionname){S,T}(model::$typename, state::SDEModels.AbstractState{$m,S,T})
       x = statevalue(state)
       t = statetime(state)
       # TODO this will not work correctly when T<:AbstractArray and ex is trivial

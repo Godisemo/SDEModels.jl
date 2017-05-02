@@ -7,11 +7,6 @@ dim{T<:AbstractSDE}(::Type{T}) = dim(supertype(T))
 model_dim{D,M}(::AbstractSDE{D,M}) = D
 noise_dim{D,M}(::AbstractSDE{D,M}) = M
 
-drift(::AbstractSDE, x) = nothing
-diffusion(::AbstractSDE, x) = nothing
-
-
-
 abstract AbstractState{D,S,T}
 
 immutable TimeDependentState{D,S,T} <: AbstractState{D,S,T}
@@ -47,3 +42,6 @@ export TimeDependentState, TimeHomogeneousState, state, statevalue, statetime
 
 Base.show(io::IO, s::TimeDependentState) = show(io, (s.x, s.t))
 Base.show(io::IO, s::TimeHomogeneousState) = show(io, s.x)
+
+drift{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("drift is not implemented for this model")
+diffusion{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("diffusion is not implemented for this model")
