@@ -1,7 +1,3 @@
-# TODO option to include startpoint
-# TODO move npaths and nsteps to key-value args
-
-
 sample(model, scheme, state0) = step(model, scheme, state0, wiener(model, scheme))
 
 sample(model, scheme, state0, npaths; args...) =
@@ -22,9 +18,10 @@ simulate(model, scheme, state0, nsteps; args...) =
 simulate(model, scheme, state0, nsteps, npaths; args...) =
   simulate!(Array(eltype(state0), nsteps, npaths), model, scheme, state0; args...)
 
-function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; args...)
-  prevstate = state0
-  for i in 1:length(x)
+function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; includestart=false, args...)
+  x[1] = prevstate = state0
+  start = includestart ? 2 : 1
+  for i in start:length(x)
     x[i] = prevstate = sample(model, scheme, prevstate; args...)
   end
   x
