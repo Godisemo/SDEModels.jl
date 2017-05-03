@@ -1,6 +1,6 @@
-immutable ModifiedBridge <: AbstractScheme
+immutable ModifiedBridge{D,T,S} <: AbstractScheme
   Δt::Float64
-  state1::TimeDependentState
+  state1::TimeDependentState{D,T,S}
 end
 
 subdivide(scheme::ModifiedBridge, nsubsteps) = ModifiedBridge(scheme.Δt / nsubsteps, scheme.state1)
