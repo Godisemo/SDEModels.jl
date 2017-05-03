@@ -1,10 +1,10 @@
 sample(model, scheme, state0::TimeDependentState) =
   TimeDependentState(_sample(model, scheme, state0), statetime(state0) + scheme.Δt)
-  
+
 sample(model, scheme, state0::TimeHomogeneousState) =
   TimeHomogeneousState(_sample(model, scheme, state0))
 
-_sample(model, scheme, state0) = step(model, scheme, state0, wiener(model, scheme))
+_sample(model, scheme, state0) = _step(model, scheme, state0, wiener(model, scheme))
 
 function sample(model, scheme, state0, nsteps; args...)
   prevstate = state0
