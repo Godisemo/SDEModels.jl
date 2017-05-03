@@ -2,11 +2,12 @@ __precompile__()
 
 module SDEModels
 using StaticArrays
+using Parameters
 
 include("base.jl")
 include("codegen.jl")
 include("schemes.jl")
-include("models.jl")
+include("models/models.jl")
 include("simulation.jl")
 include("bridge.jl")
 include("multilevel.jl")
