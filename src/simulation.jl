@@ -6,20 +6,20 @@ sample(model, scheme, state0::TimeHomogeneousState) =
 
 _sample(model, scheme, state0) = _step(model, scheme, state0, wiener(model, scheme))
 
-function sample(model, scheme, state0, nsteps; args...)
+function sample(model, scheme, state0, nsteps)
   prevstate = state0
   for i in 1:nsteps
-    prevstate = sample(model, scheme, prevstate; args...)
+    prevstate = sample(model, scheme, prevstate)
   end
   prevstate
 end
 
-sample{T}(model, scheme, state0::T, nsteps, npaths; args...) =
-  sample!(Array(T, npaths), model, scheme, state0, nsteps; args...)
+sample{T}(model, scheme, state0::T, nsteps, npaths) =
+  sample!(Array(T, npaths), model, scheme, state0, nsteps)
 
-function sample!{T}(x::AbstractArray{T,1}, model, scheme, state0, nsteps; args...)
+function sample!{T}(x::AbstractArray{T,1}, model, scheme, state0, nsteps)
   for i in 1:length(x)
-    x[i] = sample(model, scheme, state0, nsteps; args...)
+    x[i] = sample(model, scheme, state0, nsteps)
   end
   x
 end
