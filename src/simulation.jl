@@ -8,8 +8,8 @@ function sample(model, scheme, state0, nsteps; args...)
   prevstate
 end
 
-sample(model, scheme, state0, nsteps, npaths; args...) =
-  sample!(Array(eltype(state0), npaths), model, scheme, state0, nsteps; args...)
+sample{T}(model, scheme, state0::T, nsteps, npaths; args...) =
+  sample!(Array(T, npaths), model, scheme, state0, nsteps; args...)
 
 function sample!{T}(x::AbstractArray{T,1}, model, scheme, state0, nsteps; args...)
   for i in 1:length(x)
@@ -20,11 +20,11 @@ end
 
 
 
-simulate(model, scheme, state0, nsteps; includestart=false, args...) =
-  simulate!(Array(eltype(state0), nsteps + Int64(includestart)), model, scheme, state0; includestart=includestart, args...)
+simulate{T}(model, scheme, state0::T, nsteps; includestart=false, args...) =
+  simulate!(Array(T, nsteps + Int64(includestart)), model, scheme, state0; includestart=includestart, args...)
 
-simulate(model, scheme, state0, nsteps, npaths; includestart=false, args...) =
-  simulate!(Array(eltype(state0), nsteps + Int64(includestart), npaths), model, scheme, state0; includestart=includestart, args...)
+simulate{T}(model, scheme, state0::T, nsteps, npaths; includestart=false, args...) =
+  simulate!(Array(T, nsteps + Int64(includestart), npaths), model, scheme, state0; includestart=includestart, args...)
 
 function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; includestart=false, args...)
   x[1] = prevstate = state0

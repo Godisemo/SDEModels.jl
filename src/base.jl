@@ -29,8 +29,6 @@ TimeHomogeneousState(x::AbstractVector) = TimeHomogeneousState(convert(SVector{l
 state(x) = TimeHomogeneousState(x)
 state(x, t) = TimeDependentState(x, t)
 
-Base.eltype{T<:AbstractState}(::Type{T}) = T
-
 statevalue(state::AbstractState) = state.x
 statetime(state::TimeDependentState) = state.t
 statetime(state::TimeHomogeneousState) = nothing
