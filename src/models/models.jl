@@ -1,6 +1,7 @@
-include("cox_ingersoll_ross.jl")
+import Distributions: pdf, logpdf, NoncentralChisq, LogNormal
 
-@sde_model BlackScholes dS = r*S*dt + σ*S*dW
+include("black_scholes.jl")
+include("cox_ingersoll_ross.jl")
 
 @sde_model OrnsteinUhlenbeck dx = θ*(μ-x)*dt + σ*dW
 
