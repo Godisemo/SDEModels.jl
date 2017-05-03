@@ -6,6 +6,7 @@ immutable Scheme{T} <: AbstractScheme
   Δt::Float64
 end
 
+typealias Exact Scheme{:Exact}
 typealias EulerMaruyama Scheme{:EulerMaruyama}
 typealias Milstein Scheme{:Milstein}
 
