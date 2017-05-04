@@ -26,24 +26,24 @@ end
 
 
 
-simulate{T}(model, scheme, state0::T, nsteps; includestart=false, args...) =
-  simulate!(Array(T, nsteps + Int64(includestart)), model, scheme, state0; includestart=includestart, args...)
+simulate{T}(model, scheme, state0::T, nsteps; includestart=false) =
+  simulate!(Array(T, nsteps + Int64(includestart)), model, scheme, state0; includestart=includestart)
 
-simulate{T}(model, scheme, state0::T, nsteps, npaths; includestart=false, args...) =
-  simulate!(Array(T, nsteps + Int64(includestart), npaths), model, scheme, state0; includestart=includestart, args...)
+simulate{T}(model, scheme, state0::T, nsteps, npaths; includestart=false) =
+  simulate!(Array(T, nsteps + Int64(includestart), npaths), model, scheme, state0; includestart=includestart)
 
-function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; includestart=false, args...)
+function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, state0; includestart=false)
   x[1] = prevstate = state0
   start = includestart ? 2 : 1
   for i in start:length(x)
-    x[i] = prevstate = sample(model, scheme, prevstate; args...)
+    x[i] = prevstate = sample(model, scheme, prevstate)
   end
   x
 end
 
-function simulate!{T}(x::AbstractArray{T,2}, model, scheme, state0; args...)
+function simulate!{T}(x::AbstractArray{T,2}, model, scheme, state0; includestart=false)
   for i in 1:size(x, 2)
-    simulate!(view(x, :, i), model, scheme, state0; args...)
+    simulate!(view(x, :, i), model, scheme, state0; includestart=includestart)
   end
   x
 end
