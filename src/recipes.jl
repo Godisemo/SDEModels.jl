@@ -1,23 +1,22 @@
 using RecipesBase
 
-@recipe function plot{T<:SDEState}(series::AbstractArray{T,2})
-  for i in 1:size(series,2)
-    @series series[:,i]
-  end
-end
-
-@recipe function plot{T<:SDEState}(series::AbstractArray{T,1})
-  t = statetime(series)
-  z = statevalue(series)
-  D = length(first(z))
-  x = reshape(reinterpret(Float64, z), D, length(t))
-  layout --> (D,1)
-  # seriescolor --> reshape(Plots.get_color_palette(:auto, default(:bgcolor), D), 1, D)
-  t, x'
-end
-
-@recipe function plot{D,T<:SDEState}(model::AbstractSDE{D}, series::AbstractArray{T})
+@recipe function f{D}(model::SDEModels.AbstractSDE{D}, args...)
   variable_names = reshape([variables(model)...], 1, D)
   labels --> variable_names
-  series
+  args
+end
+
+@recipe function f{T<:SDEState}(y::AbstractArray{T})
+  1:size(y, 1), y
+end
+
+@recipe function f{T<:SDEState}(x::AbstractArray, y::AbstractArray{T})
+  D = length(statevalue(y[1]))
+  data = reinterpret(Float64, statevalue(y), (D, size(y)...))
+  x --> 1:size(y, 1)
+  for i in 1:size(data, 3)
+    @series x, permutedims(slicedim(data, 3, i), [2, 1])
+  end
+  layout --> (D,1)
+  # seriescolor --> reshape(Plots.get_color_palette(:auto, default(:bgcolor), D), 1, D)
 end
