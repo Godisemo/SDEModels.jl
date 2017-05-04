@@ -23,14 +23,14 @@ end
 
 
 function simulate{T}(model, scheme, t0, state0::T, nsteps; includestart=false)
-  t = t0 + scheme.Δt * (Int64(includestart):nsteps)
+  t = t0 + scheme.Δt * (Int64(!includestart):nsteps)
   x = Array(T, nsteps + Int64(includestart))
   simulate!(x, model, scheme, t0, state0; includestart=includestart)
   x, t
 end
 
 function simulate{T}(model, scheme, t0, state0::T, nsteps, npaths; includestart=false)
-  t = t0 + scheme.Δt * (Int64(includestart):nsteps)
+  t = t0 + scheme.Δt * (Int64(!includestart):nsteps)
   x = Array(T, nsteps + Int64(includestart), npaths)
   simulate!(x, model, scheme, t0, state0; includestart=includestart)
   x, t
