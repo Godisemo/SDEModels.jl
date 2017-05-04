@@ -14,12 +14,12 @@ function sample(model::CoxIngersollRoss, scheme::Exact, t0, s0::SDEState{1})
   SDEState(rand(NoncentralChisq(df, nc)) / 2c)
 end
 
-function transition(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
+function transition(model::CoxIngersollRoss, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
   2c * pdf(NoncentralChisq(df, nc), statevalue(s1) * 2c)
 end
 
-function logtransition(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
+function logtransition(model::CoxIngersollRoss, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
   logpdf(NoncentralChisq(df, nc), statevalue(s1) * 2c) + log(2c)
 end

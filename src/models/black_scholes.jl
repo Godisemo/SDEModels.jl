@@ -13,12 +13,12 @@ function sample(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1})
   SDEState(rand(d))
 end
 
-function transition(model::BlackScholes, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
+function transition(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
   pdf(d, statevalue(s1))
 end
 
-function logtransition(model::BlackScholes, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
+function logtransition(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
   logpdf(d, statevalue(s1))
 end
