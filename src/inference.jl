@@ -17,3 +17,11 @@ function logtransition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0::
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
   -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
 end
+
+function transition(model, scheme, times, data)
+  [transition(model, scheme, times[i-1], data[i-1], data[i]) for i in 2:length(data)]
+end
+
+function logtransition(model, scheme, times, data)
+  [logtransition(model, scheme, times[i-1], data[i-1], data[i]) for i in 2:length(data)]
+end
