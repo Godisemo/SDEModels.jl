@@ -1,7 +1,5 @@
-sample(model, scheme, t0, state0::TimeHomogeneousState) =
-  TimeHomogeneousState(_sample(model, scheme, t0, state0))
-
-_sample(model, scheme, t0, state0) = _step(model, scheme, t0, state0, wiener(model, scheme))
+sample(model, scheme, t0, state0::SDEState) =
+  step(model, scheme, t0, state0, wiener(model, scheme))
 
 function sample(model, scheme, t0, state0, nsteps)
   prevstate = state0

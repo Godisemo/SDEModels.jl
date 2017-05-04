@@ -9,17 +9,17 @@ function _cir_transition_params(m, s, s0)
   c, df, nc
 end
 
-function _sample(model::CoxIngersollRoss, scheme::Exact, s0::AbstractState{1})
+function sample(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
-  rand(NoncentralChisq(df, nc)) / 2c
+  SDEState(rand(NoncentralChisq(df, nc)) / 2c)
 end
 
-function transition(model::CoxIngersollRoss, scheme::Exact, s0::AbstractState{1}, s1::AbstractState{1})
+function transition(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
   2c * pdf(NoncentralChisq(df, nc), statevalue(s1) * 2c)
 end
 
-function logtransition(model::CoxIngersollRoss, scheme::Exact, s0::AbstractState{1}, s1::AbstractState{1})
+function logtransition(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1}, s1::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
   logpdf(NoncentralChisq(df, nc), statevalue(s1) * 2c) + log(2c)
 end
