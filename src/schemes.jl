@@ -12,6 +12,10 @@ typealias Milstein Scheme{:Milstein}
 
 subdivide{T}(scheme::Scheme{T}, nsubsteps) = Scheme{T}(scheme.Δt / nsubsteps)
 
+wiener_type(::AbstractSDE{0}) = Float64
+wiener_type(::AbstractSDE{1}) = Float64
+wiener_type{D}(::AbstractSDE{D}) = SVector{D,Float64}
+
 wiener{D}(::AbstractSDE{D,0}, scheme::AbstractScheme) = 0.0
 wiener{D}(::AbstractSDE{D,1}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn()
 wiener{D,M}(::AbstractSDE{D,M}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn(SVector{M})

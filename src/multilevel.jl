@@ -1,4 +1,4 @@
-type MultilevelState{M,T<:AbstractState}
+immutable MultilevelState{M,T}
   xc::T
   xf::T
 end
@@ -12,16 +12,15 @@ fine(A::AbstractArray) = reshape([ fine(x) for x in A ], size(A))
 multilevel{T}(M, xc::T, xf::T) = MultilevelState{M,T}(xc, xf)
 multilevel{T}(M, x::T) = MultilevelState{M,T}(x, x)
 
-Base.copy{M,T}(s::MultilevelState{M,T}) = MultilevelState{M,T}(s.xc, s.xf)
-
-function sample{M}(model, scheme, state0::MultilevelState{M})
+function sample{M,T}(model, scheme, state0::MultilevelState{M,T})
   subscheme = subdivide(scheme, M)
-  prevstate = copy(state0)
-  Δw = 0.0
+  prevstate_coarse = coarse(state0)
+  prevstate_fine = fine(state0)
+  Δw = zero(wiener_type(model))
   for j in 1:M
     Δw += δw = wiener(model, subscheme)
-    prevstate.xf = step(model, subscheme, prevstate.xf, δw)
+    prevstate_fine = step(model, subscheme, prevstate_fine, δw)
   end
-  prevstate.xc = step(model, scheme, prevstate.xc, Δw)
-  prevstate
+  prevstate_coarse = step(model, scheme, prevstate_coarse, Δw)
+  MultilevelState{M,T}(prevstate_coarse, prevstate_fine)
 end
