@@ -47,8 +47,13 @@ function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, t0, sta
 end
 
 function simulate!{T}(x::AbstractArray{T,2}, model, scheme, t0, state0; includestart=false)
+  start = includestart ? 2 : 1
   for i in 1:size(x, 2)
-    simulate!(view(x, :, i), model, scheme, t0, state0; includestart=includestart)
+    x[1,i] = prevstate = state0
+    for j in start:size(x, 1)
+      tj = t0 + (j - 1) * scheme.Δt
+      x[j,i] = prevstate = sample(model, scheme, tj, prevstate)
+    end
   end
   x
 end
