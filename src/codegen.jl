@@ -31,9 +31,8 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
   ex = replace_symbols(ex, replacements)
   quote
     @doc $docstring ->
-    function (SDEModels.$functionname){S,T}(model::$typename, state::SDEModels.AbstractState{$m,S,T})
+    function (SDEModels.$functionname){S,T}(model::$typename, t::Number, state::SDEModels.AbstractState{$m,S,T})
       x = statevalue(state)
-      t = statetime(state)
       # TODO this will not work correctly when T<:AbstractArray and ex is trivial
       convert(promote_type(Float64,T), $ex)
     end

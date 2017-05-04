@@ -26,16 +26,16 @@ step(model, scheme, state0::TimeDependentState, Δw) =
 step(model, scheme, state0::TimeHomogeneousState, Δw) =
   TimeHomogeneousState(_step(model, scheme, state0, Δw))
 
-function _step(model::AbstractSDE, scheme::EulerMaruyama, current_state::AbstractState, Δw)
-  μ = drift(model, current_state)
-  σ = diffusion(model, current_state)
+function _step(model::AbstractSDE, scheme::EulerMaruyama, t, current_state::AbstractState, Δw)
+  μ = drift(model, t, current_state)
+  σ = diffusion(model, t, current_state)
   statevalue(current_state) + μ * scheme.Δt + σ * Δw
 end
 
-function _step{M}(model::AbstractSDE{1,M}, scheme::Milstein, current_state::AbstractState, Δw)
-  μ = drift(model, current_state)
+function _step{M}(model::AbstractSDE{1,M}, scheme::Milstein, t, current_state::AbstractState, Δw)
+  μ = drift(model, t, current_state)
   # computes the drift and diffusion at the same time efficiently using dual numbers
-  σ∂σ = diffusion(model, state(ForwardDiff.Dual(statevalue(current_state), one(statevalue(current_state)))))
+  σ∂σ = diffusion(model, t, state(ForwardDiff.Dual(statevalue(current_state), one(statevalue(current_state)))))
   σ = ForwardDiff.value(σ∂σ)
   ∂σ, = ForwardDiff.partials(σ∂σ)
   statevalue(current_state) + μ * scheme.Δt + σ * Δw + σ * ∂σ * (Δw^2 - scheme.Δt) / 2

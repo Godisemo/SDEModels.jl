@@ -41,6 +41,6 @@ export TimeDependentState, TimeHomogeneousState, state, statevalue, statetime
 Base.show(io::IO, s::TimeDependentState) = show(io, (s.x, s.t))
 Base.show(io::IO, s::TimeHomogeneousState) = show(io, s.x)
 
-drift{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("drift is not implemented for this model")
-diffusion{D}(::AbstractSDE{D}, x::AbstractState{D}) = error("diffusion is not implemented for this model")
+drift{D}(::AbstractSDE{D}, t::Number, x::AbstractState{D}) = error("drift is not implemented for this model")
+diffusion{D}(::AbstractSDE{D}, t::Number, x::AbstractState{D}) = error("diffusion is not implemented for this model")
 variables(::AbstractSDE) = error("variables is not implemented for this model")
