@@ -9,7 +9,7 @@ function _cir_transition_params(m, s, s0)
   c, df, nc
 end
 
-function sample(model::CoxIngersollRoss, scheme::Exact, s0::SDEState{1})
+function sample(model::CoxIngersollRoss, scheme::Exact, t0, s0::SDEState{1})
   c, df, nc = _cir_transition_params(model, scheme, s0)
   SDEState(rand(NoncentralChisq(df, nc)) / 2c)
 end

@@ -8,7 +8,7 @@ function _bs_transition_distr(m, s, s0)
   LogNormal(m, d)
 end
 
-function sample(model::BlackScholes, scheme::Exact, s0::SDEState{1})
+function sample(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
   SDEState(rand(d))
 end
