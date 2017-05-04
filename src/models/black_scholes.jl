@@ -8,17 +8,17 @@ function _bs_transition_distr(m, s, s0)
   LogNormal(m, d)
 end
 
-function _sample(model::BlackScholes, scheme::Exact, s0::AbstractState{1})
+function sample(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
-  rand(d)
+  SDEState(rand(d))
 end
 
-function transition(model::BlackScholes, scheme::Exact, s0::AbstractState{1}, s1::AbstractState{1})
+function transition(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
   pdf(d, statevalue(s1))
 end
 
-function logtransition(model::BlackScholes, scheme::Exact, s0::AbstractState{1}, s1::AbstractState{1})
+function logtransition(model::BlackScholes, scheme::Exact, t0, s0::SDEState{1}, s1::SDEState{1})
   d = _bs_transition_distr(model, scheme, s0)
   logpdf(d, statevalue(s1))
 end
