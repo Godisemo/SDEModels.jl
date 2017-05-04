@@ -20,9 +20,6 @@ wiener{D}(::AbstractSDE{D,0}, scheme::AbstractScheme) = 0.0
 wiener{D}(::AbstractSDE{D,1}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn()
 wiener{D,M}(::AbstractSDE{D,M}, scheme::AbstractScheme) = sqrt(scheme.Δt) * randn(SVector{M})
 
-step(model, scheme, state0::TimeDependentState, Δw) =
-  TimeDependentState(_step(model, scheme, state0, Δw), statetime(state0) + scheme.Δt)
-
 step(model, scheme, state0::TimeHomogeneousState, Δw) =
   TimeHomogeneousState(_step(model, scheme, state0, Δw))
 
