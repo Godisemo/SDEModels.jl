@@ -6,9 +6,9 @@ import Parameters: with_kw
 # main codegen functions and macros
 # =================================
 
-function sde_struct(typename::Symbol, d::Integer, m::Integer, parameter_vars, docstring)
+function sde_struct(typename::Symbol, supertype::Symbol, d::Integer, m::Integer, parameter_vars, docstring)
   block = Expr(:block, [:($p::Float64) for p in parameter_vars]...)
-  typedef =  Expr(:type, false, :($typename <: SDEModels.AbstractSDE{$d,$m}), block)
+  typedef =  Expr(:type, false, :($typename <: SDEModels.$supertype{$d,$m}), block)
   if length(parameter_vars) > 0
      typedef = with_kw(typedef)
   end
@@ -67,6 +67,12 @@ function sde_model(typename::Symbol, ex::Expr)
   diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
   diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(diffusion_expressions)
   parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
+
+  if isempty(intersect(symbols(diffusion), values(model_vars)))
+    supertype = :StateIndependentDiffusion
+  else
+    supertype = :AbstractSDE
+  end
 
   docstring = """
     Model variables: $(join(values(model_vars), ", "))
