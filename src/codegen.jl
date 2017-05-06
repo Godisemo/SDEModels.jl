@@ -1,4 +1,4 @@
-import Calculus: simplify
+import Calculus: simplify, differentiate
 import DataStructures: OrderedSet, OrderedDict
 import Parameters: with_kw
 
@@ -60,9 +60,12 @@ function sde_model(typename::Symbol, ex::Expr)
   time_vars = OrderedDict([:dt => :t])
   process_vars = foldl(merge!, matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations)
   differentials = union(keys(time_vars), keys(process_vars))
-  drift = cat_expressions([factor_extract(e.args[2], :dt, differentials) for e in equations])
-  diffusion = length(process_vars) == 0 ? 0.0 :
-    cat_expressions([factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)])
+  drift_expressions = [factor_extract(e.args[2], :dt, differentials) for e in equations]
+  drift = cat_expressions(drift_expressions)
+  drift_jacobian_expressions = [differentiate(f_i, x_j) for f_i in drift_expressions, x_j in [:X, :Y]]
+  drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
+  diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
+  diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(diffusion_expressions)
   parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
 
   docstring = """
@@ -77,8 +80,9 @@ function sde_model(typename::Symbol, ex::Expr)
     $(join(string.(equations), "\n\n"))
   """
   blk = Expr(:block)
-  append!(blk.args, sde_struct(typename, length(equations), length(process_vars), parameter_vars, docstring).args)
+  append!(blk.args, sde_struct(typename, supertype, length(equations), length(process_vars), parameter_vars, docstring).args)
   append!(blk.args, sde_state_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
+  append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   append!(blk.args, sde_model_function(typename, :variables, :($(values(model_vars)...))).args)
   blk
@@ -109,7 +113,7 @@ function factor_extract(ex, one_sym::Symbol, zero_syms)
   replacements = Dict(s => 0 for s in zero_syms)
   replacements[one_sym] = 1
   factor = simplify(replace_symbols(ex, replacements))
-  isa(factor, Number) ? Float64(factor) : factor
+  # isa(factor, Number) ? Float64(factor) : factor
 end
 
 cat_expressions{T}(x::Array{T,1}) =
