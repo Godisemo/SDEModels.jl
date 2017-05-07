@@ -18,6 +18,10 @@ function sde_struct(typename::Symbol, supertype::Symbol, d::Integer, m::Integer,
   end
 end
 
+eltype_promote{T1<:Number,T2<:Number}(::Type{T1}, val::T2) = convert(promote_type(T1,T2), val)
+eltype_promote{T1<:Number,T2<:Number,S}(::Type{T1}, val::SVector{S,T2}) = convert(SVector{S,promote_type(T1,T2)}, val)
+eltype_promote{T1<:Number,T2<:Number,S1,S2}(::Type{T1}, val::SMatrix{S1,S2,T2}) = convert(SMatrix{S1,S2,promote_type(T1,T2)}, val)
+
 function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
   docstring = "$typename: $ex"
   replacements = Dict()
@@ -33,8 +37,7 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
     @doc $docstring ->
     function (SDEModels.$functionname){S,T}(model::$typename, t::Number, state::SDEModels.SDEState{$m,S,T})
       x = statevalue(state)
-      # TODO this will not work correctly when T<:AbstractArray and ex is trivial
-      convert(promote_type(Float64,T), $ex)
+      SDEModels.eltype_promote(S, $ex)
     end
   end
 end
