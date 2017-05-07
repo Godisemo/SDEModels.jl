@@ -1,4 +1,5 @@
 abstract AbstractSDE{D,M}
+abstract StateIndependentDiffusion{D,M} <: AbstractSDE{D,M}
 
 dim{D,M}(::AbstractSDE{D,M}) = (D,M)
 dim{D,M}(::Type{AbstractSDE{D,M}}) = (D,M)
@@ -26,5 +27,6 @@ export TimeDependentState, SDEState, state, statevalue, statetime
 Base.show(io::IO, s::SDEState) = show(io, s.x)
 
 drift{D}(::AbstractSDE{D}, t::Number, x::SDEState{D}) = error("drift is not implemented for this model")
+drift_jacobian{D}(::AbstractSDE{D}, t::Number, x::SDEState{D}) = error("drift jacobian is not implemented for this model")
 diffusion{D}(::AbstractSDE{D}, t::Number, x::SDEState{D}) = error("diffusion is not implemented for this model")
 variables(::AbstractSDE) = error("variables is not implemented for this model")
