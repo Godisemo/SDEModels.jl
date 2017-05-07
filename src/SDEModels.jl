@@ -15,7 +15,9 @@ include("inference.jl")
 include("recipes.jl")
 
 export @sde_model, dim, drift, diffusion, variables
-export Exact, ModifiedBridge, EulerMaruyama, Milstein, sample, sample!, simulate, simulate!, subsample
+export Exact, ModifiedBridge, EulerMaruyama, Milstein,
+       EulerExponential1, EulerExponential2, EulerExponential3
+export sample, sample!, simulate, simulate!, subsample
 export multilevel, coarse, fine
 export transition, logtransition
 
