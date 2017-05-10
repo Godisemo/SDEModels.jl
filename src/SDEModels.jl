@@ -5,7 +5,6 @@ using StaticArrays
 using Parameters
 
 include("base.jl")
-include("codegen.jl")
 include("schemes.jl")
 include("models/models.jl")
 include("simulation.jl")

@@ -1,5 +1,7 @@
 import Distributions: pdf, logpdf, NoncentralChisq, LogNormal
 
+include("codegen.jl")
+
 include("black_scholes.jl")
 include("cox_ingersoll_ross.jl")
 
