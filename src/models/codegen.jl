@@ -65,7 +65,7 @@ function sde_model(typename::Symbol, ex::Expr)
   differentials = union(keys(time_vars), keys(process_vars))
   drift_expressions = [factor_extract(e.args[2], :dt, differentials) for e in equations]
   drift = cat_expressions(drift_expressions)
-  drift_jacobian_expressions = [differentiate(f_i, x_j) for f_i in drift_expressions, x_j in [:X, :Y]]
+  drift_jacobian_expressions = [differentiate(f_i, x_j) for f_i in drift_expressions, x_j in values(model_vars)]
   drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
   diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
   diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(diffusion_expressions)
