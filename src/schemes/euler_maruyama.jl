@@ -1,3 +1,10 @@
+function step(model::AbstractSDE, scheme::EulerMaruyama, t, current_state::SDEState, Δw)
+  μ = drift(model, t, current_state)
+  σ = diffusion(model, t, current_state)
+  x = statevalue(current_state) + μ * scheme.Δt + σ * Δw
+  SDEState(x)
+end
+
 function _euler_transition_params(model, scheme, t0, s0, s1)
     x0 = statevalue(s0)
     x1 = statevalue(s1)
@@ -16,12 +23,4 @@ end
 function logtransition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0::SDEState{D}, s1::SDEState{D})
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
   -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
-end
-
-function transition(model, scheme, times, data)
-  [transition(model, scheme, times[i-1], data[i-1], data[i]) for i in 2:length(data)]
-end
-
-function logtransition(model, scheme, times, data)
-  [logtransition(model, scheme, times[i-1], data[i-1], data[i]) for i in 2:length(data)]
 end
