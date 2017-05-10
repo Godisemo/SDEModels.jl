@@ -6,32 +6,32 @@
 # ===================================================
 
 # TODO temporary convenience method, should be removed when expm is in StaticArrays.jl
-@inline Base.expm{T<:StaticMatrix}(x::T) = T(expm(Array(x)))
+# @inline Base.expm{T<:StaticMatrix}(x::T) = T(expm(Array(x)))
 
-function step(model::StateIndependentDiffusion, scheme::EulerExponential1, t, current_state::SDEState, Δw)
-  Jμ = drift_jacobian(model, t, current_state)
-  μ = drift(model, t, current_state)
-  σ = diffusion(model, t, current_state)
-  xprev = statevalue(current_state)
+function step(model::StateIndependentDiffusion, scheme::EulerExponential1, t0, s0, Δw)
+  Jμ = drift_jacobian(model, t0, s0)
+  μ = drift(model, t0, s0)
+  σ = diffusion(model, t0, s0)
+  xprev = statevalue(s0)
   x = expm(Jμ * scheme.Δt) * (xprev + (μ - Jμ * xprev) * scheme.Δt + σ * Δw)
   SDEState(x)
 end
 
-function step(model::StateIndependentDiffusion, scheme::EulerExponential2, t, current_state::SDEState, Δw)
-  Jμ = drift_jacobian(model, t, current_state)
-  μ = drift(model, t, current_state)
-  σ = diffusion(model, t, current_state)
-  xprev = statevalue(current_state)
+function step(model::StateIndependentDiffusion, scheme::EulerExponential2, t0, s0, Δw)
+  Jμ = drift_jacobian(model, t0, s0)
+  μ = drift(model, t0, s0)
+  σ = diffusion(model, t0, s0)
+  xprev = statevalue(s0)
   x = (I - Jμ * scheme.Δt) \ (xprev + (μ - Jμ * xprev) * scheme.Δt + σ * Δw)
   SDEState(x)
 end
 
-function step(model::StateIndependentDiffusion, scheme::EulerExponential3, t, current_state::SDEState, Δw)
-  Jμ = drift_jacobian(model, t, current_state)
+function step(model::StateIndependentDiffusion, scheme::EulerExponential3, t0, s0, Δw)
+  Jμ = drift_jacobian(model, t0, s0)
   expmJμ = expm(0.5 * Jμ * scheme.Δt)
-  μ = drift(model, t, current_state)
-  σ = diffusion(model, t, current_state)
-  xprev = statevalue(current_state)
+  μ = drift(model, t0, s0)
+  σ = diffusion(model, t0, s0)
+  xprev = statevalue(s0)
   x = expmJμ * (expmJμ * xprev + (μ - Jμ * xprev) * scheme.Δt + σ * Δw)
   SDEState(x)
 end

@@ -1,7 +1,7 @@
-function step(model::AbstractSDE, scheme::EulerMaruyama, t, current_state::SDEState, Δw)
-  μ = drift(model, t, current_state)
-  σ = diffusion(model, t, current_state)
-  x = statevalue(current_state) + μ * scheme.Δt + σ * Δw
+function step(model::AbstractSDE, scheme::EulerMaruyama, t0, s0, Δw)
+  μ = drift(model, t0, s0)
+  σ = diffusion(model, t0, s0)
+  x = statevalue(s0) + μ * scheme.Δt + σ * Δw
   SDEState(x)
 end
 
@@ -15,12 +15,12 @@ function _euler_transition_params(model, scheme, t0, s0, s1)
     z, Σ
 end
 
-function transition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0::SDEState{D}, s1::SDEState{D})
+function transition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0, s1)
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
   1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
 end
 
-function logtransition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0::SDEState{D}, s1::SDEState{D})
+function logtransition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0, s1)
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
   -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
 end

@@ -1,4 +1,4 @@
-function step(model, scheme::ModifiedBridge, t0, s0::SDEState, Δw)
+function step(model, scheme::ModifiedBridge, t0, s0, Δw)
   x0 = statevalue(s0)
   x1 = statevalue(scheme.s)
   t1 = scheme.t
