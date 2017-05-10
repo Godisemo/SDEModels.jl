@@ -22,7 +22,7 @@ statevalue(state::SDEState) = state.x
 
 statevalue(A::AbstractArray) = reshape([ statevalue(x) for x in A ], size(A))
 
-export TimeDependentState, SDEState, state, statevalue, statetime
+export SDEState, state, statevalue, statetime
 
 Base.show(io::IO, s::SDEState) = show(io, s.x)
 
