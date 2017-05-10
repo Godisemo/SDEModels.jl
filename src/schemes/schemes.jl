@@ -1,7 +1,3 @@
-abstract AbstractScheme
-abstract ConditionalScheme{T} <: AbstractScheme
-abstract UnconditionalScheme <: AbstractScheme
-
 macro unconditional_scheme(name)
   quote
     immutable $name <: UnconditionalScheme

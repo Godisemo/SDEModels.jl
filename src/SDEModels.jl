@@ -4,7 +4,18 @@ module SDEModels
 using StaticArrays
 using Parameters
 
-include("base.jl")
+abstract AbstractSDE{D,M}
+abstract StateIndependentDiffusion{D,M} <: AbstractSDE{D,M}
+
+abstract AbstractScheme
+abstract ConditionalScheme{T} <: AbstractScheme
+abstract UnconditionalScheme <: AbstractScheme
+
+immutable SDEState{D,S,T}
+  x::T
+end
+
+include("states.jl")
 include("schemes/schemes.jl")
 include("models/models.jl")
 include("simulation.jl")
