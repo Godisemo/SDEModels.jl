@@ -40,7 +40,7 @@ function simulate!{T}(x::AbstractArray{T,1}, model::AbstractSDE, scheme, t0, sta
   x[1] = prevstate = state0
   start = includestart ? 2 : 1
   for i in start:length(x)
-    ti = t0 + (i - 1) * scheme.Δt
+    ti = t0 + (i - start) * scheme.Δt
     x[i] = prevstate = sample(model, scheme, ti, prevstate)
   end
   x
@@ -51,7 +51,7 @@ function simulate!{T}(x::AbstractArray{T,2}, model, scheme, t0, state0; includes
   for i in 1:size(x, 2)
     x[1,i] = prevstate = state0
     for j in start:size(x, 1)
-      tj = t0 + (j - 1) * scheme.Δt
+      tj = t0 + (j - start) * scheme.Δt
       x[j,i] = prevstate = sample(model, scheme, tj, prevstate)
     end
   end
