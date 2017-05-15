@@ -31,7 +31,7 @@ include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
 
-subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.x)
+subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
 subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps)
 
 wiener_type(::AbstractSDE{0}) = Float64
