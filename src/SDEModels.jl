@@ -11,10 +11,6 @@ abstract AbstractScheme
 abstract ConditionalScheme{T} <: AbstractScheme
 abstract UnconditionalScheme <: AbstractScheme
 
-immutable SDEState{D,S,T}
-  x::T
-end
-
 include("states.jl")
 include("schemes/schemes.jl")
 include("models/models.jl")
