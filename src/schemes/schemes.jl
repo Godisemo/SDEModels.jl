@@ -31,6 +31,9 @@ include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
 
+_normpdf(z, Σ) = 1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
+_normlogpdf(z, Σ) = -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
+
 subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
 subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps)
 

@@ -17,10 +17,10 @@ end
 
 function transition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0, s1)
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
-  1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
+  _normpdf(z, Σ)
 end
 
 function logtransition{D}(model::AbstractSDE{D}, scheme::EulerMaruyama, t0, s0, s1)
   z, Σ = _euler_transition_params(model, scheme, t0, s0, s1)
-  -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
+  _normlogpdf(z, Σ)
 end
