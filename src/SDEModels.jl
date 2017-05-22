@@ -18,9 +18,9 @@ include("simulation.jl")
 include("multilevel.jl")
 include("recipes.jl")
 
-export @sde_model, dim, drift, diffusion, variables
-export sample, sample!, simulate, simulate!, subsample
 export multilevel, coarse, fine
+export @sde_model, dim, drift, diffusion, variables, subdivide
+export sample, sample!, simulate, simulate!
 export transition, logtransition
 
 end # module
