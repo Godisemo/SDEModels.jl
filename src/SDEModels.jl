@@ -9,6 +9,7 @@ abstract StateIndependentDiffusion{D,M} <: AbstractSDE{D,M}
 
 abstract AbstractScheme
 abstract ConditionalScheme{T} <: AbstractScheme
+abstract ImplicitScheme <: AbstractScheme
 abstract UnconditionalScheme <: AbstractScheme
 
 include("states.jl")

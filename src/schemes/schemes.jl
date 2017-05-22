@@ -7,6 +7,15 @@ macro unconditional_scheme(name)
   end |> esc
 end
 
+macro implicit_scheme(name)
+  quote
+    immutable $name <: ImplicitScheme
+      Δt::Float64
+    end
+    export $name
+  end |> esc
+end
+
 macro conditional_scheme(name)
   quote
     immutable $name{T} <: ConditionalScheme{T}
@@ -20,6 +29,7 @@ end
 
 @unconditional_scheme Exact
 @unconditional_scheme EulerMaruyama
+@implicit_scheme      ImplicitEulerMaruyama
 @unconditional_scheme Milstein
 @conditional_scheme   ModifiedBridge
 @unconditional_scheme EulerExponential1
@@ -27,6 +37,7 @@ end
 @unconditional_scheme EulerExponential3
 
 include("euler_maruyama.jl")
+include("implicit_euler_maruyama.jl")
 include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
