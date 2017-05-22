@@ -7,10 +7,10 @@ dim{T<:AbstractSDE}(::Type{T}) = dim(supertype(T))
 model_dim{D,M}(::AbstractSDE{D,M}) = D
 noise_dim{D,M}(::AbstractSDE{D,M}) = M
 
-drift(::AbstractSDE, t, x) = error("drift is not implemented for this model")
-drift_jacobian(::AbstractSDE, t, x) = error("drift jacobian is not implemented for this model")
-diffusion(::AbstractSDE, t, x) = error("diffusion is not implemented for this model")
-variables(::AbstractSDE) = error("variables is not implemented for this model")
+function drift end
+function drift_jacobian end
+function diffusion end
+function variables end
 
 include("codegen.jl")
 
