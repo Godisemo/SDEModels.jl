@@ -62,14 +62,17 @@ end
 
 @testset "simulation" begin
   t0 = 0.0
-  @test size(simulate(m1, EulerMaruyama(0.01), t0, state(100.0), 1000)[1]) == (1000,)
-  @test size(simulate(m1, Milstein(0.01), t0, state(100.0), 1000)[1]) == (1000,)
-  @test size(simulate(m2, EulerMaruyama(0.01), t0, state([100.0, 0.4]), 500)[1]) == (500,)
-  @test statevalue(sample(Deterministic(), EulerMaruyama(1), t0, state(1.0))) ≈ 2
-  @test statevalue(sample(Deterministic(), Milstein(1), t0, state(1.0))) ≈ 2
-  @test statevalue(simulate(deterministic, EulerMaruyama(1.0), t0, state(1.0), 5)[1]) ≈ [2, 4, 8, 16, 32]
-  @test statevalue(simulate(deterministic, Milstein(1.0), t0, state(1.0), 5)[1]) ≈ [2, 4, 8, 16, 32]
-  x = subsample(Deterministic(), EulerMaruyama(1), t0, state(1.0), 10000000)
-  @test_approx_eq_eps statevalue(x) e 1e-6
-  # @test statetime(x) ≈ 1.0
+  @test size(simulate(m1, EulerMaruyama(0.01), t0, state(100.0), 1000)[1]) == (1001,)
+  @test size(simulate(m1, Milstein(0.01), t0, state(100.0), 1000)[1]) == (1001,)
+  @test size(simulate(m2, EulerMaruyama(0.01), t0, state([100.0, 0.4]), 500)[1]) == (501,)
+  @test statevalue(sample(Deterministic(), EulerMaruyama(1), t0, state(1.0), 1)) ≈ 2
+  @test statevalue(sample(Deterministic(), Milstein(1), t0, state(1.0), 1)) ≈ 2
+  @test statevalue(simulate(deterministic, EulerMaruyama(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
+  @test statevalue(simulate(deterministic, Milstein(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
+
+  srand(0)
+  x1 = statevalue(simulate(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)[2])
+  srand(0)
+  x2 = statevalue(simulate(m2, EulerMaruyama(0.1/4), 0.0, state([100.0, 0.4]), 40, 100)[1])
+  @test isapprox(sum(sum(abs2.(x1 - x2))), 0, atol=1e-16)
 end

@@ -35,3 +35,25 @@ function step(model::StateIndependentDiffusion, scheme::EulerExponential3, t0, s
   x = expmJμ * (expmJμ * xprev + (μ - Jμ * xprev) * scheme.Δt + σ * Δw)
   SDEState(x)
 end
+
+function _exponential_transition_params(model, scheme::EulerExponential3, t0, s0, s1)
+    x0 = statevalue(s0)
+    x1 = statevalue(s1)
+    Jμ = drift_jacobian(model, t0, s0)
+    expmJμ = expm(0.5 * Jμ * scheme.Δt)
+    μ = expmJμ * (expmJμ * x0 + (drift(model, t0, s0) - Jμ * x0) * scheme.Δt)
+    σ = expmJμ * diffusion(model, t0, s0)
+    Σ = scheme.Δt * σ * σ'
+    z = x1 - μ
+    z, Σ
+end
+
+function transition{D}(model::AbstractSDE{D}, scheme::EulerExponential3, t0, s0, s1)
+  z, Σ = _exponential_transition_params(model, scheme, t0, s0, s1)
+  _normpdf(z, Σ)
+end
+
+function logtransition{D}(model::AbstractSDE{D}, scheme::EulerExponential3, t0, s0, s1)
+  z, Σ = _exponential_transition_params(model, scheme, t0, s0, s1)
+  _normlogpdf(z, Σ)
+end
