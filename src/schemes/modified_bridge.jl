@@ -8,7 +8,7 @@ function step(model, scheme::ModifiedBridge, t0, s0, Δw)
   SDEState(x)
 end
 
-function _bridge_transition_params(model, scheme, t0, s0, s1)
+function _normal_transition_params(model, scheme::ModifiedBridge, t0, s0, s1)
   x0 = statevalue(s0)
   xt = statevalue(s1)
   x1 = statevalue(scheme.s)
@@ -18,14 +18,4 @@ function _bridge_transition_params(model, scheme, t0, s0, s1)
   Σ = (t1 - (t0 + scheme.Δt)) / (t1 - t0) * scheme.Δt * σ * σ'
   z = xt - μ
   z, Σ
-end
-
-function transition{D}(model::AbstractSDE{D}, scheme::ModifiedBridge, t0, s0, s1)
-  z, Σ = _bridge_transition_params(model, scheme, t0, s0, s1)
-  _normpdf(z, Σ)
-end
-
-function logtransition{D}(model::AbstractSDE{D}, scheme::ModifiedBridge, t0, s0, s1)
-  z, Σ = _bridge_transition_params(model, scheme, t0, s0, s1)
-  _normlogpdf(z, Σ)
 end

@@ -31,11 +31,18 @@ include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
 
-_normpdf(z, Σ) = 1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
-_normlogpdf(z, Σ) = -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
-
 subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
 subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps)
+
+function transition(model, scheme, t0, s0, s1)
+  z, Σ = _normal_transition_params(model, scheme, t0, s0, s1)
+  1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
+end
+
+function logtransition(model, scheme, t0, s0, s1)
+  z, Σ = _normal_transition_params(model, scheme, t0, s0, s1)
+  -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
+end
 
 function transition(model, scheme, times, data)
   [transition(model, scheme, times[i-1], data[i-1], data[i]) for i in 2:length(data)]
