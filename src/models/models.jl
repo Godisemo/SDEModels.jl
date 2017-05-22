@@ -8,6 +8,7 @@ model_dim{D,M}(::AbstractSDE{D,M}) = D
 noise_dim{D,M}(::AbstractSDE{D,M}) = M
 
 function drift end
+function corrected_drift end
 function drift_jacobian end
 function diffusion end
 function variables end

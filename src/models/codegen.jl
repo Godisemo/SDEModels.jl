@@ -91,6 +91,7 @@ function sde_model(typename::Symbol, ex::Expr)
   blk = Expr(:block)
   append!(blk.args, sde_struct(typename, supertype, length(equations), length(process_vars), parameter_vars, docstring).args)
   append!(blk.args, sde_state_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
+  append!(blk.args, corrected_drift_function(typename, collect(values(model_vars)), parameter_vars, drift_expressions, diffusion_expressions).args)
   append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   append!(blk.args, sde_model_function(typename, :variables, :($(values(model_vars)...))).args)
@@ -150,4 +151,33 @@ function symbols!(set::OrderedSet{Symbol}, ex::Expr)
     symbols!(set, arg)
   end
   set
+end
+
+# =============================
+# specialized codegen functions
+# =============================
+
+function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, drift_equations, diffusion_equations)
+  D = length(model_vars)
+  corrected = Array{Any}(D)
+  for k in 1:D
+    terms = [Expr(:call, :*, f_i, differentiate(f_i, model_vars[k])) for f_i in diffusion_equations[k,:]]
+    sum_terms = Expr(:call, :+, terms...)
+    corrected[k] = simplify(:($(drift_equations[k]) - correction * $sum_terms))
+  end
+  ex = cat_expressions(corrected)
+  replacements = Dict()
+  if length(model_vars) == 1
+    push!(replacements, first(model_vars) => :x)
+  else
+    merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
+  end
+  merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  ex = replace_symbols(ex, replacements)
+  quote
+    function SDEModels.corrected_drift{S,T}(model::$typename, t::Number, state::SDEModels.SDEState{$D,S,T}, correction::Number)
+      x = statevalue(state)
+      SDEModels.eltype_promote(S, $ex)
+    end
+  end
 end

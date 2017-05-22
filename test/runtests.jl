@@ -42,13 +42,15 @@ end
 @testset "drift" begin
   t0 = 0.0
   t1 = 1.0
+  s2 = state([100.0, 0.4])
   @test drift(m1, t0, state(100.0)) ≈ 100.0 * 0.01
-  @test drift(m2, t0, state([100.0, 0.4])) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
+  @test drift(m2, t0, s2) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
   @test drift(m3, t0, state([0.1, 0.2, 0.3])) ≈ [0.2*1, 0.3*2, 0.1*3]
   @test drift(wiener, t0, state(100.0)) ≈ 0.0
   @test drift(deterministic, t0, state(100.0)) ≈ 100.0
   @test drift(timedependend, t0, state(3.0)) ≠ drift(timedependend, t1, state(3.0))
   @test drift(timedependend, 4.0, state(3.0)) ≈ 12
+  @test corrected_drift(m2, t0, s2, 0.65) ≈ drift(m2, t0, s2) - [s2.x[2]*s2.x[1]; m2.σ^2/2] * 0.65
 end
 
 @testset "diffusion" begin
