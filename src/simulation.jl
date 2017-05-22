@@ -73,21 +73,6 @@ end
   x
 end
 
-@inline function simulate!{D,T,S}(x, model, scheme, t0, s0::SDEState{D,T,S})
-  nsteps = size(x, 1)
-  npaths = size(x, 2)
-  σ = sqrt(scheme.Δt)
-  for k in 1:npaths
-    @inbounds x[1,k] = s0
-    for i in 2:nsteps
-      t = t0 + (i-2) * scheme.Δt
-      Δw = σ * _randn(S)
-      @inbounds x[i,k] = step(model, scheme, t, x[i-1,k], Δw)
-    end
-  end
-  x
-end
-
 @inline function simulate!{T}(x, model, scheme, t0, s0::T, w)
   # note that x === w is allowed
   nsteps = size(x, 1)
