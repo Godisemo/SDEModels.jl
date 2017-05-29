@@ -38,12 +38,10 @@ end
 
 function _normal_transition_params(model, scheme::EulerExponential3, t0, s0, s1)
   x0 = statevalue(s0)
-  x1 = statevalue(s1)
   Jμ = drift_jacobian(model, t0, s0)
   expmJμ = expm(0.5 * Jμ * scheme.Δt)
   μ = expmJμ * (expmJμ * x0 + (drift(model, t0, s0) - Jμ * x0) * scheme.Δt)
   σ = expmJμ * diffusion(model, t0, s0)
   Σ = scheme.Δt * σ * σ'
-  z = x1 - μ
-  z, Σ
+  μ, Σ
 end
