@@ -5,9 +5,6 @@
 #   CM Mora - IMA journal of numerical analysis, 2005
 # ===================================================
 
-# TODO temporary convenience method, should be removed when expm is in StaticArrays.jl
-# @inline Base.expm{T<:StaticMatrix}(x::T) = T(expm(Array(x)))
-
 function step(model::StateIndependentDiffusion, scheme::EulerExponential1, t0, s0, Δw)
   Jμ = drift_jacobian(model, t0, s0)
   μ = drift(model, t0, s0)
