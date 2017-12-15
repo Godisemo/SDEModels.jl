@@ -3,6 +3,7 @@ macro unconditional_scheme(name)
     immutable $name <: UnconditionalScheme
       Δt::Float64
     end
+    $name(Δt, t, s) = $name(Δt)
     export $name
   end |> esc
 end
@@ -12,6 +13,7 @@ macro implicit_scheme(name)
     immutable $name <: ImplicitScheme
       Δt::Float64
     end
+    $name(Δt, t, s) = $name(Δt)
     export $name
   end |> esc
 end
