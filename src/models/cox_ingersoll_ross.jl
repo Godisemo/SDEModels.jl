@@ -1,4 +1,4 @@
-@sde_model CoxIngersollRoss dr = κ*(θ-r)*dt + σ*√r*dW
+@sde_model CoxIngersollRoss dr = κ*(θ-r)*dt + σ*sqrt(r)*dW
 
 function _cir_transition_params(m, s, s0)
   @unpack κ, θ, σ = m

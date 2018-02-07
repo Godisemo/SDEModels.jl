@@ -47,7 +47,7 @@ include("euler_exponential.jl")
 subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
 subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps)
 
-typealias NormalScheme Union{EulerMaruyama,ImplicitEulerMaruyama,ModifiedBridge,EulerExponential3}
+const NormalScheme = Union{EulerMaruyama,ImplicitEulerMaruyama,ModifiedBridge,EulerExponential3}
 
 function transition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, s0, s1)
   μ, Σ = _normal_transition_params(model, scheme, t0, s0, s1)

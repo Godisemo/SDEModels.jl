@@ -10,7 +10,7 @@ function sde_struct(typename::Symbol, supertype::Symbol, d::Integer, m::Integer,
   block = Expr(:block, [:($p::Float64) for p in parameter_vars]...)
   typedef =  Expr(:type, false, :($typename <: SDEModels.$supertype{$d,$m}), block)
   if length(parameter_vars) > 0
-     typedef = with_kw(typedef)
+     typedef = with_kw(typedef, current_module())
   end
   quote
     @doc $docstring -> $typedef

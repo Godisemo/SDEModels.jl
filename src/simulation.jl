@@ -5,7 +5,7 @@
 @generated function _randn{S<:StaticArray}(::Type{S})
   quote
     $(Expr(:meta, :inline))
-    $(Expr(:call, S, repeated(:(randn()), length(S))...))
+    $(Expr(:call, S, Iterators.repeated(:(randn()), length(S))...))
   end
 end
 
