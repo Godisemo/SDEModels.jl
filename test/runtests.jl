@@ -71,10 +71,17 @@ end
   @test statevalue(sample(Deterministic(), Milstein(1), t0, state(1.0), 1)) ≈ 2
   @test statevalue(simulate(deterministic, EulerMaruyama(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
   @test statevalue(simulate(deterministic, Milstein(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
+end
 
+@testset "multilevel" begin
   srand(0)
-  x1 = statevalue(simulate(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)[2])
+  xc, xf, tc, tf = simulate(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)
   srand(0)
-  x2 = statevalue(simulate(m2, EulerMaruyama(0.1/4), 0.0, state([100.0, 0.4]), 40, 100)[1])
-  @test isapprox(sum(sum(abs2.(x1 - x2))), 0, atol=1e-16)
+  x, t = simulate(m2, EulerMaruyama(0.1/4), 0.0, state([100.0, 0.4]), 40, 100)
+  @test t == tf
+  @test isapprox(sum(norm.(statevalue(xf) - statevalue(x)).^2), 0, atol=1e-16)
+  srand(0)
+  yc, yf = sample(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)
+  @test isapprox(sum(norm.(statevalue(xf[end,:]) - statevalue(yf)).^2), 0, atol=1e-16)
+  @test isapprox(sum(norm.(statevalue(xc[end,:]) - statevalue(yc)).^2), 0, atol=1e-16)
 end
