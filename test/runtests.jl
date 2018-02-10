@@ -74,14 +74,26 @@ end
 end
 
 @testset "multilevel" begin
+  substeps = 4
+  coarse = EulerMaruyama(0.1)
+  fine = subdivide(coarse, substeps)
+  x0 = state([100.0, 0.4])
   srand(0)
-  xc, xf, tc, tf = simulate(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)
+  xc, xf, tc, tf = SDEModels._multilevel_simulate(m2, coarse, fine, substeps, 0.0, x0, 10, 100)
   srand(0)
-  x, t = simulate(m2, EulerMaruyama(0.1/4), 0.0, state([100.0, 0.4]), 40, 100)
+  x, t = simulate(m2, fine, 0.0, x0, 40, 100)
   @test t == tf
   @test isapprox(sum(norm.(statevalue(xf) - statevalue(x)).^2), 0, atol=1e-16)
   srand(0)
-  yc, yf = sample(m2, Multilevel(4, EulerMaruyama(0.1)), 0.0, state([100.0, 0.4]), 10, 100)
+  yc, yf = SDEModels._multilevel_sample(m2, coarse, fine, substeps, 0.0, x0, 10, 100)
   @test isapprox(sum(norm.(statevalue(xf[end,:]) - statevalue(yf)).^2), 0, atol=1e-16)
   @test isapprox(sum(norm.(statevalue(xc[end,:]) - statevalue(yc)).^2), 0, atol=1e-16)
+
+  ml_scheme = MultilevelScheme(coarse, 4, 0:4)
+  srand(0)
+  ml_x1, ml_t = simulate(m2, ml_scheme, 0.0, x0, 1, 1)
+  @test length(unique(extrema.(ml_t))) == 1
+  srand(0)
+  ml_x2 = sample(m2, ml_scheme, 0.0, x0, 1, 1)
+  @test isapprox(sum(norm.(statevalue(last.(ml_x1)) - statevalue(last.(ml_x2)))), 0, atol=1e-13)
 end

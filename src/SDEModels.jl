@@ -22,7 +22,7 @@ include("recipes.jl")
 
 export @sde_model, dim, drift, diffusion, corrected_drift, variables, subdivide
 export sample, sample!, simulate, simulate!
-export Multilevel
+export MultilevelScheme, npaths
 export transition, logtransition
 
 end # module
