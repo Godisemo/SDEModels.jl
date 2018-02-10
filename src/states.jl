@@ -1,4 +1,4 @@
-immutable SDEState{D,S,T}
+struct SDEState{D,S,T}
   x::T
 end
 

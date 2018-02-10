@@ -1,6 +1,6 @@
 macro unconditional_scheme(name)
   quote
-    immutable $name <: UnconditionalScheme
+    struct $name <: UnconditionalScheme
       Δt::Float64
     end
     $name(Δt, t, s) = $name(Δt)
@@ -10,7 +10,7 @@ end
 
 macro implicit_scheme(name)
   quote
-    immutable $name <: ImplicitScheme
+    struct $name <: ImplicitScheme
       Δt::Float64
     end
     $name(Δt, t, s) = $name(Δt)
@@ -20,7 +20,7 @@ end
 
 macro conditional_scheme(name)
   quote
-    immutable $name{T} <: ConditionalScheme{T}
+    struct $name{T} <: ConditionalScheme{T}
       Δt::Float64
       t::Float64
       s::T
