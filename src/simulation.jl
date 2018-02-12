@@ -1,26 +1,26 @@
 
 # specialized versions of `randn(S)` which give better performance
-@inline _randn(S) = randn(S)
+# @inline _randn(::S) where S = randn(S)
 @inline _randn(::Type{Float64}) = randn()
-@generated function _randn{S<:StaticArray}(::Type{S})
-  quote
-    $(Expr(:meta, :inline))
-    $(Expr(:call, S, Iterators.repeated(:(randn()), length(S))...))
-  end
-end
+@generated function _randn(::Type{SVector{D,Float64}}) where D
+   quote
+     $(Expr(:meta, :inline))
+     $(Expr(:call, SVector, Iterators.repeated(:(randn()), D)...))
+   end
+ end
 
 ## wiener process simulation ##
 
-function wiener!{D,T,S}(w::AbstractVecOrMat{SDEState{D,T,S}}, Δt)
+function wiener!(w::AbstractVecOrMat{T}, Δt) where T
   σ = sqrt(Δt)
   nsteps = size(w, 1)
   npaths = size(w, 2)
   for k in 1:npaths
-    sum = zero(S)
-    @inbounds w[1,k] = SDEState(sum)
+    sum = zero(T)
+    @inbounds w[1,k] = sum
     for i in 2:nsteps
-      sum += σ * _randn(S)
-      @inbounds w[i,k] = SDEState(sum)
+      sum += σ * _randn(T)
+      @inbounds w[i,k] = sum
     end
   end
   w
@@ -28,61 +28,61 @@ end
 
 ## simulate and discard everything except for the endpoint ##
 
-@inline function sample{D,T,S}(model, scheme, t0, s0::SDEState{D,T,S}, nsteps)
+@inline function sample(model, scheme, t0, x0::T, nsteps) where T
   σ = sqrt(scheme.Δt)
-  x = s0
+  x = x0
   for i in 1:nsteps
     ti = t0 + (i - 1) * scheme.Δt
-    Δw = σ * _randn(S)
+    Δw = σ * _randn(T)
     x = step(model, scheme, ti, x, Δw)
   end
   x
 end
 
-@inline sample{T}(model, scheme, t0, s0::T, nsteps, npaths) =
-  sample!(Array{T}(npaths), model, scheme, t0, s0, nsteps)
+@inline sample(model, scheme, t0, x0::T, nsteps, npaths) where T =
+  sample!(Array{T}(npaths), model, scheme, t0, x0, nsteps)
 
-@inline function sample!(x, model, scheme, t0, s0, nsteps)
+@inline function sample!(x, model, scheme, t0, x0, nsteps)
   for k in 1:length(x)
-    x[k] = sample(model, scheme, t0, s0, nsteps)
+    x[k] = sample(model, scheme, t0, x0, nsteps)
   end
   x
 end
 
 ## simulate and save the entire path, start point included ##
 
-function simulate{T,N}(model, scheme, t0, s0::T, nsteps, npaths::Vararg{Integer,N})
+function simulate(model, scheme, t0, x0::T, nsteps, npaths::Vararg{Integer,N}) where {T,N}
   t = t0 + scheme.Δt * (0:nsteps)
   x = Array{T}(nsteps+1, npaths...)
-  simulate!(x, model, scheme, t0, s0)
+  simulate!(x, model, scheme, t0, x0)
   x, t
 end
 
-@inline function simulate!{D,T,S}(x, model, scheme, t0, s0::SDEState{D,T,S})
+@inline function simulate!(x, model, scheme, t0, x0::T) where T
   nsteps = size(x, 1)
   npaths = size(x, 2)
   σ = sqrt(scheme.Δt)
   for k in 1:npaths
-    @inbounds x[1,k] = s0
+    @inbounds x[1,k] = x0
     for i in 2:nsteps
       t = t0 + (i-2) * scheme.Δt
-      Δw = σ * _randn(S)
+      Δw = σ * _randn(T)
       @inbounds x[i,k] = step(model, scheme, t, x[i-1,k], Δw)
     end
   end
   x
 end
 
-@inline function simulate!{T}(x, model, scheme, t0, s0::T, w)
+@inline function simulate!(x, model, scheme, t0, x0::T, w) where T
   # note that x === w is allowed
   nsteps = size(x, 1)
   npaths = size(x, 2)
   for k in 1:npaths
-    @inbounds wprev = statevalue(w[1,k])
-    @inbounds x[1,k] = s0
+    @inbounds wprev = w[1,k]
+    @inbounds x[1,k] = x0
     for i in 2:nsteps
       t = t0 + (i-2) * scheme.Δt
-      @inbounds wnext = statevalue(w[i,k])
+      @inbounds wnext = w[i,k]
       @inbounds x[i,k] = step(model, scheme, t, x[i-1,k], wnext - wprev)
       wprev = wnext
     end

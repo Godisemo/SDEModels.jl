@@ -1,14 +1,13 @@
-function step(model::AbstractSDE, scheme::EulerMaruyama, t0, s0, Δw)
-  μ = drift(model, t0, s0)
-  σ = diffusion(model, t0, s0)
-  x = statevalue(s0) + μ * scheme.Δt + σ * Δw
-  SDEState(x)
+function step(model::AbstractSDE, scheme::EulerMaruyama, t0, x0, Δw)
+  μ = drift(model, t0, x0)
+  σ = diffusion(model, t0, x0)
+  x = x0 + μ * scheme.Δt + σ * Δw
+  x
 end
 
-function _normal_transition_params(model, scheme::EulerMaruyama, t0, s0, s1)
-  x0 = statevalue(s0)
-  μ = x0 + drift(model, t0, s0) * scheme.Δt
-  σ = diffusion(model, t0, s0)
+function _normal_transition_params(model, scheme::EulerMaruyama, t0, x0, x1)
+  μ = x0 + drift(model, t0, x0) * scheme.Δt
+  σ = diffusion(model, t0, x0)
   Σ = scheme.Δt * σ * σ'
   μ, Σ
 end

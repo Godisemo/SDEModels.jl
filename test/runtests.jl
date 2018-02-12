@@ -43,34 +43,34 @@ end
   t0 = 0.0
   t1 = 1.0
   s2 = state([100.0, 0.4])
-  @test drift(m1, t0, state(100.0)) ≈ 100.0 * 0.01
+  @test drift(m1, t0, 100.0) ≈ 100.0 * 0.01
   @test drift(m2, t0, s2) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
   @test drift(m3, t0, state([0.1, 0.2, 0.3])) ≈ [0.2*1, 0.3*2, 0.1*3]
-  @test drift(wiener, t0, state(100.0)) ≈ 0.0
-  @test drift(deterministic, t0, state(100.0)) ≈ 100.0
-  @test drift(timedependend, t0, state(3.0)) ≠ drift(timedependend, t1, state(3.0))
-  @test drift(timedependend, 4.0, state(3.0)) ≈ 12
-  @test corrected_drift(m2, t0, s2, 0.65) ≈ drift(m2, t0, s2) - [s2.x[2]*s2.x[1]; m2.σ^2/2] * 0.65
+  @test drift(wiener, t0, 100.0) ≈ 0.0
+  @test drift(deterministic, t0, 100.0) ≈ 100.0
+  @test drift(timedependend, t0, 3.0) ≠ drift(timedependend, t1, 3.0)
+  @test drift(timedependend, 4.0, 3.0) ≈ 12
+  @test corrected_drift(m2, t0, s2, 0.65) ≈ drift(m2, t0, s2) - [s2[2]*s2[1]; m2.σ^2/2] * 0.65
 end
 
 @testset "diffusion" begin
   t0 = 0.0
-  @test diffusion(m1, t0, state(100.0)) ≈ 100.0 * 0.3
+  @test diffusion(m1, t0, 100.0) ≈ 100.0 * 0.3
   @test diffusion(m2, t0, state([100.0, 0.4])) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
   @test diffusion(m3, t0, state([0.1, 0.2, 0.3])) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
-  @test diffusion(wiener, t0, state(100.0)) ≈ 1.0
-  @test diffusion(deterministic, t0, state(100.0)) ≈ 0.0
+  @test diffusion(wiener, t0, 100.0) ≈ 1.0
+  @test diffusion(deterministic, t0, 100.0) ≈ 0.0
 end
 
 @testset "simulation" begin
   t0 = 0.0
-  @test size(simulate(m1, EulerMaruyama(0.01), t0, state(100.0), 1000)[1]) == (1001,)
-  @test size(simulate(m1, Milstein(0.01), t0, state(100.0), 1000)[1]) == (1001,)
+  @test size(simulate(m1, EulerMaruyama(0.01), t0, 100.0, 1000)[1]) == (1001,)
+  @test size(simulate(m1, Milstein(0.01), t0, 100.0, 1000)[1]) == (1001,)
   @test size(simulate(m2, EulerMaruyama(0.01), t0, state([100.0, 0.4]), 500)[1]) == (501,)
-  @test statevalue(sample(Deterministic(), EulerMaruyama(1), t0, state(1.0), 1)) ≈ 2
-  @test statevalue(sample(Deterministic(), Milstein(1), t0, state(1.0), 1)) ≈ 2
-  @test statevalue(simulate(deterministic, EulerMaruyama(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
-  @test statevalue(simulate(deterministic, Milstein(1.0), t0, state(1.0), 5)[1]) ≈ [1, 2, 4, 8, 16, 32]
+  @test sample(Deterministic(), EulerMaruyama(1), t0, 1.0, 1) ≈ 2
+  @test sample(Deterministic(), Milstein(1), t0, 1.0, 1) ≈ 2
+  @test simulate(deterministic, EulerMaruyama(1.0), t0, 1.0, 5)[1] ≈ [1, 2, 4, 8, 16, 32]
+  @test simulate(deterministic, Milstein(1.0), t0, 1.0, 5)[1] ≈ [1, 2, 4, 8, 16, 32]
 end
 
 @testset "multilevel" begin
@@ -83,11 +83,11 @@ end
   srand(0)
   x, t = simulate(m2, fine, 0.0, x0, 40, 100)
   @test t == tf
-  @test isapprox(sum(norm.(statevalue(xf) - statevalue(x)).^2), 0, atol=1e-16)
+  @test isapprox(sum(norm.(xf - x).^2), 0, atol=1e-16)
   srand(0)
   yc, yf = SDEModels._multilevel_sample(m2, coarse, fine, substeps, 0.0, x0, 10, 100)
-  @test isapprox(sum(norm.(statevalue(xf[end,:]) - statevalue(yf)).^2), 0, atol=1e-16)
-  @test isapprox(sum(norm.(statevalue(xc[end,:]) - statevalue(yc)).^2), 0, atol=1e-16)
+  @test isapprox(sum(norm.(xf[end,:] - yf).^2), 0, atol=1e-16)
+  @test isapprox(sum(norm.(xc[end,:] - yc).^2), 0, atol=1e-16)
 
   ml_scheme = MultilevelScheme(coarse, 4, 0:4)
   srand(0)
@@ -95,5 +95,5 @@ end
   @test length(unique(extrema.(ml_t))) == 1
   srand(0)
   ml_x2 = sample(m2, ml_scheme, 0.0, x0, 1, 1)
-  @test isapprox(sum(norm.(statevalue(last.(ml_x1)) - statevalue(last.(ml_x2)))), 0, atol=1e-13)
+  @test isapprox(sum(norm.(last.(ml_x1) - last.(ml_x2))), 0, atol=1e-13)
 end

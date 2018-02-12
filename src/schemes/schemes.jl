@@ -49,15 +49,15 @@ subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubste
 
 const NormalScheme = Union{EulerMaruyama,ImplicitEulerMaruyama,ModifiedBridge,EulerExponential3}
 
-function transition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, s0, s1)
-  μ, Σ = _normal_transition_params(model, scheme, t0, s0, s1)
-  z = μ - statevalue(s1)
+function transition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1)
+  μ, Σ = _normal_transition_params(model, scheme, t0, x0, x1)
+  z = μ - x1
   1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
 end
 
-function logtransition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, s0, s1)
-  μ, Σ = _normal_transition_params(model, scheme, t0, s0, s1)
-  z = μ - statevalue(s1)
+function logtransition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1)
+  μ, Σ = _normal_transition_params(model, scheme, t0, x0, x1)
+  z = μ - x1
   -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))
 end
 
