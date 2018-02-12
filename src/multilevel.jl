@@ -28,12 +28,12 @@ function cost(s::MultilevelScheme, npaths)
 end
 
 simulate(model, scheme::MultilevelScheme, t0, x0, nsteps, npaths::Int64) =
-  simulate(model, scheme::MultilevelScheme, t0, x0, nsteps, fill(npaths, length(scheme.levels)))
+  simulate(model, scheme, t0, x0, nsteps, fill(npaths, length(scheme.levels)))
 
 sample(model, scheme::MultilevelScheme, t0, x0, nsteps, npaths::Int64) =
-  sample(model, scheme::MultilevelScheme, t0, x0, nsteps, fill(npaths, length(scheme.levels)))
+  sample(model, scheme, t0, x0, nsteps, fill(npaths, length(scheme.levels)))
 
-function simulate(model, scheme::MultilevelScheme, t0, x0, nsteps, npaths)
+function simulate(model, scheme::MultilevelScheme, t0, x0::T, nsteps, npaths::Array{Int64,1}) where {T<:Union{Float64, SVector{D,Float64} where D}}
   nlevels = length(scheme.levels)
   ml_schemes = schemes(scheme)
   ml_steps = scheme.substeps.^scheme.levels
@@ -48,7 +48,7 @@ function simulate(model, scheme::MultilevelScheme, t0, x0, nsteps, npaths)
   x, t
 end
 
-function sample(model, scheme::MultilevelScheme, t0, x0, nsteps, npaths)
+function sample(model, scheme::MultilevelScheme, t0, x0::T, nsteps, npaths::Array{Int64,1}) where {T<:Union{Float64, SVector{D,Float64} where D}}
   nlevels = length(scheme.levels)
   ml_schemes = schemes(scheme)
   ml_steps = scheme.substeps.^scheme.levels
@@ -96,4 +96,19 @@ function _multilevel_simulate(model, coarse_scheme, fine_scheme, substeps, t0, x
   simulate!(xf, model, fine_scheme, t0, x0, xf)
   simulate!(xc, model, coarse_scheme, t0, x0, xc)
   xc, xf, tc, tf
+end
+
+## wrapper methods to make sure StaticArrays are used internaly ##
+
+function sample(model, scheme::MultilevelScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Array{Int64,1})
+  D = length(x0)
+  x = sample(model, scheme, t0, SVector{D}(x0), nsteps, npaths)
+  data = [reinterpret(Float64, xx, (D, size(xx)...)) for xx in x]
+end
+
+function simulate(model, scheme::MultilevelScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Array{Int64,1})
+  D = length(x0)
+  x, t = simulate(model, scheme, t0, SVector{D}(x0), nsteps, npaths)
+  data = [reinterpret(Float64, xx, (D, size(xx)...)) for xx in x]
+  data, t
 end

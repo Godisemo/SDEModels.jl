@@ -13,12 +13,10 @@ abstract type ImplicitScheme <: AbstractScheme end
 abstract type ConditionalScheme{T} <: ExplicitScheme end
 abstract type UnconditionalScheme <: ExplicitScheme end
 
-include("states.jl")
 include("schemes/schemes.jl")
 include("models/models.jl")
 include("simulation.jl")
 include("multilevel.jl")
-include("recipes.jl")
 
 export @sde_model, dim, drift, diffusion, corrected_drift, variables, subdivide
 export sample, sample!, simulate, simulate!

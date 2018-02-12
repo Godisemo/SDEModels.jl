@@ -89,3 +89,23 @@ end
   end
   x
 end
+
+## wrapper methods to make sure StaticArrays are used internaly ##
+
+function sample(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps)
+  x = sample(model, scheme, t0, SVector(x0...), nsteps)
+  data = Array{Float64}(x)
+end
+
+function sample(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Vararg{Integer,N}) where N
+  D = length(x0)
+  x = sample(model, scheme, t0, SVector{D}(x0), nsteps, npaths...)
+  data = reinterpret(Float64, x, (D, size(x)...))
+end
+
+function simulate(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Vararg{Integer,N}) where N
+  D = length(x0)
+  x, t = simulate(model, scheme, t0, SVector{D}(x0), nsteps, npaths...)
+  data = reinterpret(Float64, x, (D, size(x)...))
+  data, t
+end

@@ -1,4 +1,5 @@
 using SDEModels
+using StaticArrays
 using Base.Test
 
 ex1 = :(dX = Y*a*dt + b*dW1 + dW2)
@@ -42,10 +43,10 @@ end
 @testset "drift" begin
   t0 = 0.0
   t1 = 1.0
-  s2 = state([100.0, 0.4])
+  s2 = [100.0, 0.4]
   @test drift(m1, t0, 100.0) ≈ 100.0 * 0.01
   @test drift(m2, t0, s2) ≈ [0.01*100.0, 10.0*(0.3-0.4)]
-  @test drift(m3, t0, state([0.1, 0.2, 0.3])) ≈ [0.2*1, 0.3*2, 0.1*3]
+  @test drift(m3, t0, [0.1, 0.2, 0.3]) ≈ [0.2*1, 0.3*2, 0.1*3]
   @test drift(wiener, t0, 100.0) ≈ 0.0
   @test drift(deterministic, t0, 100.0) ≈ 100.0
   @test drift(timedependend, t0, 3.0) ≠ drift(timedependend, t1, 3.0)
@@ -56,8 +57,8 @@ end
 @testset "diffusion" begin
   t0 = 0.0
   @test diffusion(m1, t0, 100.0) ≈ 100.0 * 0.3
-  @test diffusion(m2, t0, state([100.0, 0.4])) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
-  @test diffusion(m3, t0, state([0.1, 0.2, 0.3])) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
+  @test diffusion(m2, t0, [100.0, 0.4]) ≈ [100.0*sqrt(0.4) 0.0; 0.4*0.1*sqrt(0.4) sqrt(1-0.4^2)*0.1*sqrt(0.4)]
+  @test diffusion(m3, t0, [0.1, 0.2, 0.3]) ≈ [4 5 0 0; 0 1 1 0; 0 0 6 -1]
   @test diffusion(wiener, t0, 100.0) ≈ 1.0
   @test diffusion(deterministic, t0, 100.0) ≈ 0.0
 end
@@ -66,7 +67,7 @@ end
   t0 = 0.0
   @test size(simulate(m1, EulerMaruyama(0.01), t0, 100.0, 1000)[1]) == (1001,)
   @test size(simulate(m1, Milstein(0.01), t0, 100.0, 1000)[1]) == (1001,)
-  @test size(simulate(m2, EulerMaruyama(0.01), t0, state([100.0, 0.4]), 500)[1]) == (501,)
+  @test size(simulate(m2, EulerMaruyama(0.01), t0, [100.0, 0.4], 500)[1]) == (2, 501)
   @test sample(Deterministic(), EulerMaruyama(1), t0, 1.0, 1) ≈ 2
   @test sample(Deterministic(), Milstein(1), t0, 1.0, 1) ≈ 2
   @test simulate(deterministic, EulerMaruyama(1.0), t0, 1.0, 5)[1] ≈ [1, 2, 4, 8, 16, 32]
@@ -77,15 +78,15 @@ end
   substeps = 4
   coarse = EulerMaruyama(0.1)
   fine = subdivide(coarse, substeps)
-  x0 = state([100.0, 0.4])
+  x0 = [100.0, 0.4]
   srand(0)
-  xc, xf, tc, tf = SDEModels._multilevel_simulate(m2, coarse, fine, substeps, 0.0, x0, 10, 100)
+  xc, xf, tc, tf = SDEModels._multilevel_simulate(m2, coarse, fine, substeps, 0.0, SVector(x0...), 10, 100)
   srand(0)
-  x, t = simulate(m2, fine, 0.0, x0, 40, 100)
+  x, t = simulate(m2, fine, 0.0, SVector(x0...), 40, 100)
   @test t == tf
   @test isapprox(sum(norm.(xf - x).^2), 0, atol=1e-16)
   srand(0)
-  yc, yf = SDEModels._multilevel_sample(m2, coarse, fine, substeps, 0.0, x0, 10, 100)
+  yc, yf = SDEModels._multilevel_sample(m2, coarse, fine, substeps, 0.0, SVector(x0...), 10, 100)
   @test isapprox(sum(norm.(xf[end,:] - yf).^2), 0, atol=1e-16)
   @test isapprox(sum(norm.(xc[end,:] - yc).^2), 0, atol=1e-16)
 
