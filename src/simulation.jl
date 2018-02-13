@@ -39,6 +39,15 @@ end
   x
 end
 
+@inline function sample(model, scheme::Exact, t0, x0, nsteps)
+  x = x0
+  for i in 1:nsteps
+    ti = t0 + (i - 1) * scheme.Δt
+    x = sample(model, scheme, ti, x)
+  end
+  x
+end
+
 @inline sample(model, scheme, t0, x0::T, nsteps, npaths) where T =
   sample!(Array{T}(npaths), model, scheme, t0, x0, nsteps)
 
@@ -56,6 +65,19 @@ function simulate(model, scheme, t0, x0::T, nsteps, npaths::Vararg{Integer,N}) w
   x = Array{T}(nsteps+1, npaths...)
   simulate!(x, model, scheme, t0, x0)
   x, t
+end
+
+@inline function simulate!(x, model, scheme::Exact, t0, x0)
+  nsteps = size(x, 1)
+  npaths = size(x, 2)
+  for k in 1:npaths
+    @inbounds x[1,k] = x0
+    for i in 2:nsteps
+      t = t0 + (i-2) * scheme.Δt
+      @inbounds x[i,k] = sample(model, scheme, t, x[i-1,k])
+    end
+  end
+  x
 end
 
 @inline function simulate!(x, model, scheme, t0, x0::T) where T
