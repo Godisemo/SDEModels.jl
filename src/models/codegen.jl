@@ -54,7 +54,7 @@ function sde_model_function(typename::Symbol, functionname::Symbol, ex)
   end
 end
 
-function sde_model(typename::Symbol, ex::Expr)
+function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   if ex.head == :block
     equations = filter(e -> e.head == :(=), ex.args)
   elseif ex.head == :(=)
@@ -78,8 +78,9 @@ function sde_model(typename::Symbol, ex::Expr)
   drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
   diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
   diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(symbolic_mul(diffusion_expressions, correlation_chol))
-  parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
-
+  if isempty(parameter_vars)
+    parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
+  end
   if isempty(intersect(symbols(diffusion), values(model_vars)))
     supertype = :StateIndependentDiffusion
   else
@@ -107,8 +108,8 @@ function sde_model(typename::Symbol, ex::Expr)
   blk
 end
 
-macro sde_model(typename, ex)
-  esc(sde_model(typename, ex))
+macro sde_model(typename, ex, parameter_vars...)
+  esc(sde_model(typename, ex, parameter_vars...))
 end
 
 # ================================
