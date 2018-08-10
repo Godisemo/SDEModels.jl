@@ -6,6 +6,8 @@ Tools for working with stochastic differential equation models.
 [![Coverage Status](https://coveralls.io/repos/github/Godisemo/SDEModels.jl/badge.svg?branch=master)](https://coveralls.io/github/Godisemo/SDEModels.jl?branch=master)
 [![codecov.io](http://codecov.io/github/Godisemo/SDEModels.jl/coverage.svg?branch=master)](http://codecov.io/github/Godisemo/SDEModels.jl?branch=master)
 
+[![See the talk from JuliaCon 2018 about SDEModels.jl](https://img.youtube.com/vi/dy7tXk403bM/mq1.jpg)](https://www.youtube.com/watch?v=dy7tXk403bM)
+
 The main feature of this package is that it allows you to define SDE models in a compact form, similar to the mathematical definition.
 ```julia
 @sde_model BlackScholes dS = r*S*dt + σ*S*dW
