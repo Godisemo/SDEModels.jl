@@ -2,7 +2,6 @@ __precompile__()
 
 module SDEModels
 using Parameters
-using RandomNumbers
 using StaticArrays
 
 abstract type AbstractSDE{D,M} end
