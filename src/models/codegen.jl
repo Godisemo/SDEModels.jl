@@ -1,5 +1,6 @@
 import Calculus: simplify, differentiate
 import DataStructures: OrderedSet, OrderedDict
+using Distributions
 import Parameters: with_kw
 
 # =================================
@@ -27,6 +28,30 @@ eltype_promote(::Type{T1}, val::SVector{S,T2}) where {T1<:Number,T2<:Number,S} =
 eltype_promote(::Type{T1}, val::SMatrix{S1,S2,T2}) where {T1<:Number,T2<:Number,S1,S2} =
   convert(SMatrix{S1,S2,promote_type(T1,T2)}, val)
 
+function marked_sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, mark_vars, ex)
+  docstring = "$typename: $ex"
+  replacements = Dict()
+  if length(model_vars) == 1
+    push!(replacements, first(model_vars) => :x)
+  else
+    merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
+  end
+  merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  if length(mark_vars) == 1
+    push!(replacements, first(mark_vars) => :ξ)
+  else
+    merge!(replacements, Dict(j => :(ξ[$i]) for (i,j) in enumerate(mark_vars)))
+  end
+  m = length(model_vars)
+  ex = replace_symbols(ex, replacements)
+  quote
+    @doc $docstring ->
+    function (SDEModels.$functionname)(model::$typename, t::Number, x::S, ξ) where S
+      SDEModels.eltype_promote(eltype(S), $ex)
+    end
+  end
+end
+
 function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
   docstring = "$typename: $ex"
   replacements = Dict()
@@ -46,9 +71,11 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
   end
 end
 
-function sde_model_function(typename::Symbol, functionname::Symbol, ex)
+function sde_model_function(typename::Symbol, functionname::Symbol, parameter_vars, ex)
+  replacements = Dict(map(s -> s => :(model.$s), parameter_vars))
+  ex = replace_symbols(ex, replacements)
   quote
-    function (SDEModels.$functionname)(::$typename)
+    function (SDEModels.$functionname)(model::$typename)
       $ex
     end
   end
@@ -56,20 +83,22 @@ end
 
 function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   if ex.head == :block
-    equations = filter(e -> e.head == :(=), ex.args)
+    equations = filter(e -> e.head == :(=) || (e.head == :call && e.args[1] == :~), ex.args)
   elseif ex.head == :(=)
     equations = [ex]
   else
     error("Expression must be block or assignment $(ex.head)")
   end
 
-  correlation_equations = filter(eq -> !isa(eq.args[1], Symbol), equations)
-  equations = filter(eq -> isa(eq.args[1], Symbol), equations)
+  correlation_equations = filter(eq -> eq.head == :(=) && isa(eq.args[1], Expr), equations)
+  mark_equations = filter(eq -> eq.head == :call && eq.args[1] == :~, equations)
+  equations = filter(eq -> eq.head == :(=) && isa(eq.args[1], Symbol), equations)
 
   model_vars = foldl(merge!, matchdict(r"(?<=^d).*", e.args[1]) for e in equations)
   time_vars = OrderedDict([:dt => :t])
   process_vars = foldl(merge!, matchdict(r"(?<=^d)[wW].*", e.args[2]) for e in equations)
-  differentials = union(keys(time_vars), keys(process_vars))
+  jump_vars = foldl(merge!, matchdict(r"(?<=^d)[N]", e.args[2]) for e in equations)
+  differentials = union(keys(time_vars), keys(process_vars), keys(jump_vars))
   correlation_matrix = correlation_matrix_extract(correlation_equations, process_vars)
   correlation_chol = symbolic_chol(correlation_matrix)
   drift_expressions = [factor_extract(e.args[2], :dt, differentials) for e in equations]
@@ -78,10 +107,16 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
   diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
   diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(symbolic_mul(diffusion_expressions, correlation_chol))
+  jump_expressions = [factor_extract(e.args[2], dn, differentials) for e in equations, dn in keys(jump_vars)]
+  jump = isempty(jump_expressions) ? 0 : cat_expressions(jump_expressions[:,1]) # currently only allows one jump
+  mark_vars = isempty(mark_equations) ? Symbol[] : foldl(merge!, [e.args[2]] for e in mark_equations)
   if isempty(parameter_vars)
-    parameter_vars = setdiff(union(symbols(drift), symbols(diffusion)), union(values(model_vars), [:t]))
+    parameter_vars = setdiff(union(symbols(drift), symbols(diffusion), symbols(jump)), union(values(model_vars), [:t], values(mark_vars)))
   end
-  if isempty(intersect(symbols(diffusion), values(model_vars)))
+
+  if length(jump_vars) > 0
+    supertype = :JumpSDE
+  elseif isempty(intersect(symbols(diffusion), values(model_vars)))
     supertype = :StateIndependentDiffusion
   else
     supertype = :AbstractSDE
@@ -94,6 +129,8 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
 
     Parameter variables: $(join(parameter_vars, ", "))
 
+    Jump variables: $(join(values(jump_vars), ", "))
+
     Definition:
 
     $(join(string.(equations), "\n\n"))
@@ -104,7 +141,12 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   append!(blk.args, corrected_drift_function(typename, collect(values(model_vars)), parameter_vars, drift_expressions, diffusion_expressions).args)
   append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
-  append!(blk.args, sde_model_function(typename, :variables, :($(values(model_vars)...))).args)
+  append!(blk.args, marked_sde_state_function(typename, :jump, values(model_vars), parameter_vars, mark_vars, jump).args)
+  append!(blk.args, sde_model_function(typename, :variables, parameter_vars, :($(values(model_vars)...))).args)
+  if supertype == :JumpSDE
+    mark_dist = mark_equations[1].args[3]
+    append!(blk.args, sde_model_function(typename, :mark_distribution, parameter_vars, mark_dist).args)
+  end
   blk
 end
 
@@ -144,6 +186,7 @@ cat_expressions{T}(x::Array{T,2}) =
 
 replace_symbols(ex, dict) = replace_symbols!(copy(ex), dict)
 replace_symbols(sym::Symbol, dict) = replace_symbols!(sym, dict)
+replace_symbols(tup::Tuple, dict) = Tuple(replace_symbols(t, dict) for t in tup)
 replace_symbols!(ex, dict::Associative) = haskey(dict, ex) ? dict[ex] : ex
 function replace_symbols!(ex::Expr, dict::Associative)
   for i in 1:length(ex.args)

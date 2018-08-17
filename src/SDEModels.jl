@@ -1,10 +1,12 @@
 __precompile__()
 
 module SDEModels
-using StaticArrays
 using Parameters
+using RandomNumbers
+using StaticArrays
 
 abstract type AbstractSDE{D,M} end
+abstract type JumpSDE{D,M} <: AbstractSDE{D,M} end
 abstract type StateIndependentDiffusion{D,M} <: AbstractSDE{D,M} end
 
 abstract type AbstractScheme end
@@ -18,7 +20,7 @@ include("models/models.jl")
 include("simulation.jl")
 include("multilevel.jl")
 
-export @sde_model, dim, drift, diffusion, corrected_drift, variables, subdivide
+export @sde_model, dim, drift, diffusion, jump, corrected_drift, variables, subdivide
 export sample, sample!, simulate, simulate!
 export MultilevelScheme, npaths
 export transition, logtransition
