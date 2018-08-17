@@ -5,7 +5,8 @@ struct MultilevelScheme{T<:AbstractScheme}
 end
 
 function schemes(s::MultilevelScheme)
-  subdivide.(s.scheme, s.substeps.^s.levels)
+  # subdivide.(s.scheme, s.substeps.^s.levels)
+  [subdivide(s.scheme, s.substeps^l) for l in s.levels]
 end
 
 function npaths(s::MultilevelScheme, max_budget)
@@ -38,8 +39,8 @@ function simulate(model, scheme::MultilevelScheme, t0, x0::T, nsteps, npaths::Ar
   ml_schemes = schemes(scheme)
   ml_steps = scheme.substeps.^scheme.levels
   x1, t1 = simulate(model, ml_schemes[1], t0, x0, nsteps*ml_steps[1], npaths[1])
-  x = Array{typeof(x1)}(2*nlevels-1)
-  t = Array{typeof(t1)}(2*nlevels-1)
+  x = Array{typeof(x1)}(undef, 2*nlevels-1)
+  t = Array{typeof(t1)}(undef, 2*nlevels-1)
   x[1] = x1
   t[1] = t1
   for i in 2:nlevels
@@ -53,7 +54,7 @@ function sample(model, scheme::MultilevelScheme, t0, x0::T, nsteps, npaths::Arra
   ml_schemes = schemes(scheme)
   ml_steps = scheme.substeps.^scheme.levels
   x1 = sample(model, ml_schemes[1], t0, x0, nsteps*ml_steps[1], npaths[1])
-  x = Array{typeof(x1)}(2*nlevels-1)
+  x = Array{typeof(x1)}(undef, 2*nlevels-1)
   x[1] = x1
   for i in 2:nlevels
     x[2i-2], x[2i-1] = _multilevel_sample(model, ml_schemes[i-1], ml_schemes[i], scheme.substeps, t0, x0, nsteps*ml_steps[i-1], npaths[i])
@@ -62,8 +63,8 @@ function sample(model, scheme::MultilevelScheme, t0, x0::T, nsteps, npaths::Arra
 end
 
 function _multilevel_sample(model, coarse_scheme, fine_scheme, substeps, t0, x0::T, nsteps, npaths) where T
-  xc = Array{T}(npaths)
-  xf = Array{T}(npaths)
+  xc = Array{T}(undef, npaths)
+  xf = Array{T}(undef, npaths)
   for i in 1:npaths
     xc[i], xf[i] = _multilevel_sample(model, coarse_scheme, fine_scheme, substeps, t0, x0, nsteps)
   end
@@ -88,9 +89,9 @@ function _multilevel_sample(model, coarse_scheme, fine_scheme, substeps, t0, x0:
 end
 
 function _multilevel_simulate(model, coarse_scheme, fine_scheme, substeps, t0, x0::T, nsteps, npaths::Vararg{Integer,N}) where {T,N}
-  tf = t0 + fine_scheme.Δt * (0:nsteps*substeps)
+  tf = t0 .+ fine_scheme.Δt * (0:nsteps*substeps)
   tc = tf[1:substeps:end]
-  xf = Array{T}(nsteps*substeps+1, npaths...)
+  xf = Array{T}(undef, nsteps*substeps+1, npaths...)
   wiener!(xf, fine_scheme.Δt)
   xc = xf[1:substeps:end,:]
   simulate!(xf, model, fine_scheme, t0, x0, xf)
@@ -103,12 +104,12 @@ end
 function sample(model, scheme::MultilevelScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Array{Int64,1})
   D = length(x0)
   x = sample(model, scheme, t0, SVector{D}(x0), nsteps, npaths)
-  data = [reinterpret(Float64, xx, (D, size(xx)...)) for xx in x]
+  data = [reshape(reinterpret(Float64, vec(xx)), (D, size(xx)...)) for xx in x]
 end
 
 function simulate(model, scheme::MultilevelScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Array{Int64,1})
   D = length(x0)
   x, t = simulate(model, scheme, t0, SVector{D}(x0), nsteps, npaths)
-  data = [reinterpret(Float64, xx, (D, size(xx)...)) for xx in x]
+  data = [reshape(reinterpret(Float64, vec(xx)), (D, size(xx)...)) for xx in x]
   data, t
 end

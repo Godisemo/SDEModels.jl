@@ -44,18 +44,20 @@ include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
 
-subdivide{T<:ConditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
-subdivide{T<:UnconditionalScheme}(scheme::T, nsubsteps) = T(scheme.Δt / nsubsteps)
+subdivide(scheme::T, nsubsteps) where {T<:ConditionalScheme} =
+  T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
+subdivide(scheme::T, nsubsteps) where {T<:UnconditionalScheme} =
+  T(scheme.Δt / nsubsteps)
 
 const NormalScheme = Union{EulerMaruyama,ImplicitEulerMaruyama,ModifiedBridge,EulerExponential3}
 
-function transition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1)
+function transition(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1) where D
   μ, Σ = _normal_transition_params(model, scheme, t0, x0, x1)
   z = μ - x1
   1.0 / sqrt(det(2pi*Σ)) * exp(-0.5*dot(z, Σ\z))
 end
 
-function logtransition{D}(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1)
+function logtransition(model::AbstractSDE{D}, scheme::NormalScheme, t0, x0, x1) where D
   μ, Σ = _normal_transition_params(model, scheme, t0, x0, x1)
   z = μ - x1
   -0.5*(D*log(2pi) + log(det(Σ)) + dot(z, Σ\z))

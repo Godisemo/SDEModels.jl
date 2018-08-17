@@ -1,6 +1,8 @@
 using SDEModels
 using StaticArrays
-using Base.Test
+using Test
+import Random: seed!
+import LinearAlgebra: norm
 
 ex1 = :(dX = Y*a*dt + b*dW1 + dW2)
 
@@ -30,9 +32,9 @@ deterministic = Deterministic()
 timedependend = TimeDependent(1, 2)
 
 @testset "model creation" begin
-  @test fieldnames(m1) == [:r, :σ]
-  @test fieldnames(m2) == [:r, :κ, :θ, :σ, :ρ]
-  @test fieldnames(m3) == [:a, :c, :e, :b, :d, :f]
+  @test fieldnames(BlackScholes) == (:r, :σ)
+  @test fieldnames(Heston) == (:r, :κ, :θ, :σ, :ρ)
+  @test fieldnames(TestModel) == (:a, :c, :e, :b, :d, :f)
   @test dim(m1) == (1,1)
   @test dim(m2) == (2,2)
   @test dim(m3) == (3,4)
@@ -79,22 +81,22 @@ end
   coarse = EulerMaruyama(0.1)
   fine = subdivide(coarse, substeps)
   x0 = [100.0, 0.4]
-  srand(0)
+  seed!(0)
   xc, xf, tc, tf = SDEModels._multilevel_simulate(m2, coarse, fine, substeps, 0.0, SVector(x0...), 10, 100)
-  srand(0)
+  seed!(0)
   x, t = simulate(m2, fine, 0.0, SVector(x0...), 40, 100)
   @test t == tf
   @test isapprox(sum(norm.(xf - x).^2), 0, atol=1e-16)
-  srand(0)
+  seed!(0)
   yc, yf = SDEModels._multilevel_sample(m2, coarse, fine, substeps, 0.0, SVector(x0...), 10, 100)
   @test isapprox(sum(norm.(xf[end,:] - yf).^2), 0, atol=1e-16)
   @test isapprox(sum(norm.(xc[end,:] - yc).^2), 0, atol=1e-16)
 
   ml_scheme = MultilevelScheme(coarse, 4, 0:4)
-  srand(0)
+  seed!(0)
   ml_x1, ml_t = simulate(m2, ml_scheme, 0.0, x0, 1, 1)
   @test length(unique(extrema.(ml_t))) == 1
-  srand(0)
+  seed!(0)
   ml_x2 = sample(m2, ml_scheme, 0.0, x0, 1, 1)
   @test isapprox(sum(norm.(last.(ml_x1) - last.(ml_x2))), 0, atol=1e-13)
 end

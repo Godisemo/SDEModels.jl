@@ -1,6 +1,6 @@
 import ForwardDiff
 
-function step{M}(model::AbstractSDE{1,M}, scheme::Milstein, t0, x0, Δw)
+function step(model::AbstractSDE{1,M}, scheme::Milstein, t0, x0, Δw) where M
   μ = drift(model, t0, x0)
   # computes the drift and diffusion at the same time efficiently using dual numbers
   dual = ForwardDiff.Dual(x0, one(x0))

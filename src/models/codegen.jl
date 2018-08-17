@@ -1,7 +1,7 @@
 import Calculus: simplify, differentiate
 import DataStructures: OrderedSet, OrderedDict
 using Distributions
-import Parameters: with_kw
+# import Parameters: with_kw
 
 # =================================
 # main codegen functions and macros
@@ -9,12 +9,13 @@ import Parameters: with_kw
 
 function sde_struct(typename::Symbol, supertype::Symbol, d::Integer, m::Integer, parameter_vars, docstring)
   block = Expr(:block, [:($p::Float64) for p in parameter_vars]...)
-  typedef =  Expr(:type, false, :($typename <: SDEModels.$supertype{$d,$m}), block)
-  if length(parameter_vars) > 0
-     typedef = with_kw(typedef, current_module())
-  end
+  typedef =  Expr(:struct, false, :($typename <: SDEModels.$supertype{$d,$m}), block)
+  # if length(parameter_vars) > 0
+     # typedef = with_kw(typedef, current_module())
+  # end
   quote
-    @doc $docstring -> $typedef
+    # @doc $docstring ->
+    $typedef
     export $typename
   end
 end
@@ -45,7 +46,7 @@ function marked_sde_state_function(typename::Symbol, functionname::Symbol, model
   m = length(model_vars)
   ex = replace_symbols(ex, replacements)
   quote
-    @doc $docstring ->
+    # @doc $docstring ->
     function (SDEModels.$functionname)(model::$typename, t::Number, x::S, ξ) where S
       SDEModels.eltype_promote(eltype(S), $ex)
     end
@@ -64,7 +65,7 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
   m = length(model_vars)
   ex = replace_symbols(ex, replacements)
   quote
-    @doc $docstring ->
+    # @doc $docstring ->
     function (SDEModels.$functionname)(model::$typename, t::Number, x::S) where S
       SDEModels.eltype_promote(eltype(S), $ex)
     end
@@ -83,7 +84,7 @@ end
 
 function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   if ex.head == :block
-    equations = filter(e -> e.head == :(=) || (e.head == :call && e.args[1] == :~), ex.args)
+    equations = filter(e -> e isa Expr && (e.head == :(=) || (e.head == :call && e.args[1] == :~)), ex.args)
   elseif ex.head == :(=)
     equations = [ex]
   else
@@ -142,7 +143,8 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   append!(blk.args, marked_sde_state_function(typename, :jump, values(model_vars), parameter_vars, mark_vars, jump).args)
-  append!(blk.args, sde_model_function(typename, :variables, parameter_vars, :($(values(model_vars)...))).args)
+  # append!(blk.args, sde_model_function(typename, :variables, parameter_vars, :($(values(model_vars)...))).args)
+  append!(blk.args, sde_model_function(typename, :variables, parameter_vars, Tuple(values(model_vars))).args)
   if supertype == :JumpSDE
     mark_dist = mark_equations[1].args[3]
     append!(blk.args, sde_model_function(typename, :mark_distribution, parameter_vars, mark_dist).args)
@@ -178,17 +180,17 @@ function factor_extract(ex, one_sym::Symbol, zero_syms)
   # isa(factor, Number) ? Float64(factor) : factor
 end
 
-cat_expressions{T}(x::Array{T,1}) =
+cat_expressions(x::Array{T,1}) where T =
   length(x) == 1 ? x[1] : :(StaticArrays.SVector{$(size(x)...)}($(x...)))
 
-cat_expressions{T}(x::Array{T,2}) =
+cat_expressions(x::Array{T,2}) where T =
   length(x) == 1 ? x[1] : :(StaticArrays.SMatrix{$(size(x)...)}($(x...)))
 
 replace_symbols(ex, dict) = replace_symbols!(copy(ex), dict)
 replace_symbols(sym::Symbol, dict) = replace_symbols!(sym, dict)
 replace_symbols(tup::Tuple, dict) = Tuple(replace_symbols(t, dict) for t in tup)
-replace_symbols!(ex, dict::Associative) = haskey(dict, ex) ? dict[ex] : ex
-function replace_symbols!(ex::Expr, dict::Associative)
+replace_symbols!(ex, dict::AbstractDict) = haskey(dict, ex) ? dict[ex] : ex
+function replace_symbols!(ex::Expr, dict::AbstractDict)
   for i in 1:length(ex.args)
     ex.args[i] = replace_symbols!(ex.args[i], dict)
   end
@@ -207,16 +209,17 @@ function symbols!(set::OrderedSet{Symbol}, ex::Expr)
 end
 
 function symbolic_mul(A, B)
-  C = Array{Any}(size(A, 1), size(B, 2))
+  C = Array{Any}(undef, size(A, 1), size(B, 2))
   for i=1:size(A, 1), j=1:size(B, 2)
     C[i,j] = simplify(Expr(:call, :+, [:($(A[i,k])*$(B[k,j])) for k=1:size(A, 2)]...))
   end
   C
 end
 
-function symbolic_chol(A::Symmetric)
+function symbolic_chol(A)
+  # note: this assumes A is symmetric
   n = size(A, 1)
-  B = Array{Any}(n, n)
+  B = Array{Any}(undef, n, n)
   for k=1:n
     tmp = simplify(Expr(:call, :-, A[k,k], Expr(:call, :+, 0, [:($(B[k,j])^2) for j=1:k-1]...)))
 
@@ -247,18 +250,18 @@ function correlation_matrix_extract(equations, process_vars)
       rhs = rhs.args[end]
     end
     if lhs.args[1] == :* && length(lhs.args) == 3
-      i = findfirst(process_var_keys, lhs.args[2])
-      j = findfirst(process_var_keys, lhs.args[3])
+      i = findfirst(isequal(lhs.args[2]), process_var_keys)
+      j = findfirst(isequal(lhs.args[3]), process_var_keys)
       ρ = factor_extract(rhs, :dt, [])
       S[i,j] = S[j,i] = simplify(ρ)
     end
   end
-  Symmetric(S)
+  S # note: S is symmetric
 end
 
 function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, drift_equations, diffusion_equations)
   D = length(model_vars)
-  corrected = Array{Any}(D)
+  corrected = Array{Any}(undef, D)
   for k in 1:D
     terms = [Expr(:call, :*, f_i, differentiate(f_i, model_vars[k])) for f_i in diffusion_equations[k,:]]
     sum_terms = Expr(:call, :+, terms...)

@@ -1,11 +1,11 @@
 import Distributions: pdf, logpdf, NoncentralChisq, LogNormal, Normal
 
-dim{D,M}(::AbstractSDE{D,M}) = (D,M)
-dim{D,M}(::Type{AbstractSDE{D,M}}) = (D,M)
-dim{T<:AbstractSDE}(::Type{T}) = dim(supertype(T))
+dim(::AbstractSDE{D,M}) where {D,M} = (D,M)
+dim(::Type{AbstractSDE{D,M}}) where {D,M} = (D,M)
+dim(::Type{T}) where {T<:AbstractSDE} = dim(supertype(T))
 
-model_dim{D,M}(::AbstractSDE{D,M}) = D
-noise_dim{D,M}(::AbstractSDE{D,M}) = M
+model_dim(::AbstractSDE{D,M}) where {D,M} = D
+noise_dim(::AbstractSDE{D,M}) where {D,M} = M
 
 function drift end
 function corrected_drift end

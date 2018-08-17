@@ -49,7 +49,7 @@ end
 end
 
 @inline sample(model, scheme, t0, x0::T, nsteps, npaths) where T =
-  sample!(Array{T}(npaths), model, scheme, t0, x0, nsteps)
+  sample!(Array{T}(undef, npaths), model, scheme, t0, x0, nsteps)
 
 @inline function sample!(x, model, scheme, t0, x0, nsteps)
   for k in 1:length(x)
@@ -61,8 +61,8 @@ end
 ## simulate and save the entire path, start point included ##
 
 function simulate(model, scheme, t0, x0::T, nsteps, npaths::Vararg{Integer,N}) where {T,N}
-  t = t0 + scheme.Δt * (0:nsteps)
-  x = Array{T}(nsteps+1, npaths...)
+  t = t0 .+ scheme.Δt * (0:nsteps)
+  x = Array{T}(undef, nsteps+1, npaths...)
   simulate!(x, model, scheme, t0, x0)
   x, t
 end
@@ -129,7 +129,7 @@ end
 
 function sample(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps)
   x = sample(model, scheme, t0, SVector(x0...), nsteps)
-  data = Array{Float64}(x)
+  data = Array{Float64}(undef, x)
 end
 
 function sample(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Vararg{Integer,N}) where N
@@ -141,7 +141,7 @@ end
 function simulate(model, scheme::AbstractScheme, t0, x0::Array{Float64,1}, nsteps, npaths::Vararg{Integer,N}) where N
   D = length(x0)
   x, t = simulate(model, scheme, t0, SVector{D}(x0), nsteps, npaths...)
-  data = reinterpret(Float64, x, (D, size(x)...))
+  data = reshape(reinterpret(Float64, vec(x)), (D, size(x)...))
   data, t
 end
 
