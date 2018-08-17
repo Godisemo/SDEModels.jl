@@ -2,9 +2,9 @@
 
 function _bs_transition_distr(m, s, x0)
   @unpack r, σ = m
-  m = log(x0) + (r-0.5*σ^2)*s.Δt
+  μ = log(x0) + (r-0.5*σ^2)*s.Δt
   d = sqrt(s.Δt)*σ
-  LogNormal(m, d)
+  LogNormal(μ, d)
 end
 
 function sample(model::BlackScholes, scheme::Exact, t0, x0)
