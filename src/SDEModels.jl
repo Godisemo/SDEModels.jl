@@ -1,5 +1,3 @@
-__precompile__()
-
 module SDEModels
 using Parameters
 using StaticArrays

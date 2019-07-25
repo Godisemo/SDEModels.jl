@@ -37,7 +37,7 @@ function marked_sde_state_function(typename::Symbol, functionname::Symbol, model
   else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
-  merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   if length(mark_vars) == 1
     push!(replacements, first(mark_vars) => :ξ)
   else
@@ -61,7 +61,7 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
   else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
-  merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   m = length(model_vars)
   ex = replace_symbols(ex, replacements)
   quote
@@ -73,7 +73,7 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
 end
 
 function sde_model_function(typename::Symbol, functionname::Symbol, parameter_vars, ex)
-  replacements = Dict(map(s -> s => :(model.$s), parameter_vars))
+  replacements = Dict(broadcast(s -> s => :(model.$s), parameter_vars))
   ex = replace_symbols(ex, replacements)
   quote
     function (SDEModels.$functionname)(model::$typename)
@@ -274,7 +274,7 @@ function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, 
   else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
   end
-  merge!(replacements, Dict(map(s -> s => :(model.$s), parameter_vars)))
+  merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   ex = replace_symbols(ex, replacements)
   quote
     function SDEModels.corrected_drift(model::$typename, t::Number, x::S, correction::Number) where S
