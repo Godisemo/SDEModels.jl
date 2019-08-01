@@ -71,16 +71,16 @@ function _multilevel_sample(model, coarse_scheme, fine_scheme, substeps, t0, x0:
   xc, xf
 end
 
-function _multilevel_sample(model, coarse_scheme, fine_scheme, substeps, t0, x0::T, nsteps) where T
+function _multilevel_sample(model::T1, coarse_scheme, fine_scheme, substeps, t0, x0::T2, nsteps) where {T1,T2}
   xc = x0
   xf = x0
   σ = sqrt(fine_scheme.Δt)
   for n in 1:nsteps
-    Δw = zero(T)
+    Δw = zero(T2)
     tc = t0 + (n - 1) * coarse_scheme.Δt
     for i in 1:substeps
       tf = tc + (i - 1) * fine_scheme.Δt
-      Δw += δw = σ * _randn(T)
+      Δw += δw = σ * _randn(T1)
       xf = step(model, fine_scheme, tf, xf, δw)
     end
     xc = step(model, coarse_scheme, tc, xc, Δw)

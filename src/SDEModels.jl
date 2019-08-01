@@ -21,5 +21,6 @@ export @sde_model, dim, drift, diffusion, jump, corrected_drift, variables, subd
 export sample, sample!, simulate, simulate!
 export MultilevelScheme, npaths
 export transition, logtransition
+export StaticArrays
 
 end # module

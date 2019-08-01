@@ -1,13 +1,21 @@
 
 # specialized versions of `randn(S)` which give better performance
 # @inline _randn(::S) where S = randn(S)
+@inline _randn(::Type{T}) where {T<:AbstractSDE{1,0}} = 0.0
+@inline _randn(::Type{T}) where {T<:AbstractSDE{1,1}} = randn()
+@generated function _randn(::Type{T}) where {D,M,T<:AbstractSDE{D,M}}
+  quote
+    $(Expr(:meta, :inline))
+    $(Expr(:call, SVector, Iterators.repeated(:(randn()), M)...))
+  end
+end
 @inline _randn(::Type{Float64}) = randn()
 @generated function _randn(::Type{SVector{D,Float64}}) where D
-   quote
-     $(Expr(:meta, :inline))
-     $(Expr(:call, SVector, Iterators.repeated(:(randn()), D)...))
-   end
- end
+  quote
+    $(Expr(:meta, :inline))
+    $(Expr(:call, SVector, Iterators.repeated(:(randn()), D)...))
+  end
+end
 
 ## wiener process simulation ##
 
@@ -28,7 +36,7 @@ end
 
 ## simulate and discard everything except for the endpoint ##
 
-@inline function sample(model, scheme, t0, x0::T, nsteps) where T
+@inline function sample(model::T, scheme, t0, x0, nsteps) where T
   σ = sqrt(scheme.Δt)
   x = x0
   for i in 1:nsteps
@@ -93,7 +101,7 @@ end
   x
 end
 
-@inline function simulate!(x, model, scheme, t0, x0::T) where T
+@inline function simulate!(x, model::T, scheme, t0, x0) where T
   nsteps = size(x, 1)
   npaths = size(x, 2)
   σ = sqrt(scheme.Δt)

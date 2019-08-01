@@ -32,11 +32,11 @@ eltype_promote(::Type{T1}, val::SMatrix{S1,S2,T2}) where {T1<:Number,T2<:Number,
 function marked_sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, mark_vars, ex)
   docstring = "$typename: $ex"
   replacements = Dict()
-  if length(model_vars) == 1
-    push!(replacements, first(model_vars) => :x)
-  else
+  # if length(model_vars) == 1
+    # push!(replacements, first(model_vars) => :x)
+  # else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
-  end
+  # end
   merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   if length(mark_vars) == 1
     push!(replacements, first(mark_vars) => :ξ)
@@ -56,11 +56,11 @@ end
 function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, ex)
   docstring = "$typename: $ex"
   replacements = Dict()
-  if length(model_vars) == 1
-    push!(replacements, first(model_vars) => :x)
-  else
+  # if length(model_vars) == 1
+    # push!(replacements, first(model_vars) => :x)
+  # else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
-  end
+  # end
   merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   m = length(model_vars)
   ex = replace_symbols(ex, replacements)
@@ -269,11 +269,11 @@ function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, 
   end
   ex = cat_expressions(corrected)
   replacements = Dict()
-  if length(model_vars) == 1
-    push!(replacements, first(model_vars) => :x)
-  else
+  # if length(model_vars) == 1
+    # push!(replacements, first(model_vars) => :x)
+  # else
     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
-  end
+  # end
   merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
   ex = replace_symbols(ex, replacements)
   quote
