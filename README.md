@@ -15,7 +15,7 @@ The main feature of this package is that it allows you to define SDE models in a
 The `@sde_model` macro figures out the properties of your model, and generates all code that is necessary.
 In this case, the code generated is:
 ```julia
-  immutable BlackScholes <: AbstractSDE{1,1} # 1 dimension and 1 wiener process
+  struct BlackScholes <: AbstractSDE{1,1} # 1 dimension and 1 wiener process
     r::Float64
     s::Float64
   end
@@ -39,7 +39,7 @@ end
 which generates the code
 ```julia
   # the parameters are arranged in the order of appearance
-  immutable Heston <: AbstractSDE{2,2} # 2 dimension and 2 wiener process
+  struct Heston <: AbstractSDE{2,2} # 2 dimension and 2 wiener process
     r::Float64
     κ::Float64
     θ::Float64
