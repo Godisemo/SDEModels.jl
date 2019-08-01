@@ -37,12 +37,14 @@ end
 @unconditional_scheme EulerExponential1
 @unconditional_scheme EulerExponential2
 @unconditional_scheme EulerExponential3
+@unconditional_scheme RungeKutta
 
 include("euler_maruyama.jl")
 include("implicit_euler_maruyama.jl")
 include("milstein.jl")
 include("modified_bridge.jl")
 include("euler_exponential.jl")
+include("runge_kutta.jl")
 
 subdivide(scheme::T, nsubsteps) where {T<:ConditionalScheme} =
   T(scheme.Δt / nsubsteps, scheme.t, scheme.s)
