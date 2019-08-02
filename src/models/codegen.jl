@@ -20,14 +20,14 @@ function sde_struct(typename::Symbol, supertype::Symbol, d::Integer, m::Integer,
   end
 end
 
-eltype_promote(::Type{T1}, val::T2)  where {T1<:Number,T2<:Number} =
-  convert(promote_type(T1,T2), val)
-
-eltype_promote(::Type{T1}, val::SVector{S,T2}) where {T1<:Number,T2<:Number,S} =
-  convert(SVector{S,promote_type(T1,T2)}, val)
-
-eltype_promote(::Type{T1}, val::SMatrix{S1,S2,T2}) where {T1<:Number,T2<:Number,S1,S2} =
-  convert(SMatrix{S1,S2,promote_type(T1,T2)}, val)
+# eltype_promote(::Type{T1}, val::T2)  where {T1<:Number,T2<:Number} =
+#   convert(promote_type(T1,T2), val)
+#
+# eltype_promote(::Type{T1}, val::SVector{S,T2}) where {T1<:Number,T2<:Number,S} =
+#   convert(SVector{S,promote_type(T1,T2)}, val)
+#
+# eltype_promote(::Type{T1}, val::SMatrix{S1,S2,T2}) where {T1<:Number,T2<:Number,S1,S2} =
+#   convert(SMatrix{S1,S2,promote_type(T1,T2)}, val)
 
 function marked_sde_state_function(typename::Symbol, functionname::Symbol, model_vars, parameter_vars, mark_vars, ex)
   docstring = "$typename: $ex"
@@ -48,7 +48,8 @@ function marked_sde_state_function(typename::Symbol, functionname::Symbol, model
   quote
     # @doc $docstring ->
     function (SDEModels.$functionname)(model::$typename, t::Number, x::S, ξ) where S
-      SDEModels.eltype_promote(eltype(S), $ex)
+      # SDEModels.eltype_promote(eltype(S), $ex)
+      $ex
     end
   end
 end
@@ -67,7 +68,8 @@ function sde_state_function(typename::Symbol, functionname::Symbol, model_vars, 
   quote
     # @doc $docstring ->
     function (SDEModels.$functionname)(model::$typename, t::Number, x::S) where S
-      SDEModels.eltype_promote(eltype(S), $ex)
+      # SDEModels.eltype_promote(eltype(S), $ex)
+      $ex
     end
   end
 end
@@ -278,7 +280,8 @@ function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, 
   ex = replace_symbols(ex, replacements)
   quote
     function SDEModels.corrected_drift(model::$typename, t::Number, x::S, correction::Number) where S
-      SDEModels.eltype_promote(eltype(S), $ex)
+      # SDEModels.eltype_promote(eltype(S), $ex)
+      $ex
     end
   end
 end
