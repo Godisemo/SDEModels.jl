@@ -1,3 +1,5 @@
+import ForwardDiff
+
 macro unconditional_scheme(name)
   quote
     struct $name <: UnconditionalScheme
