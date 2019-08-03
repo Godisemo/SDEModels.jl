@@ -106,8 +106,8 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   correlation_chol = symbolic_chol(correlation_matrix)
   drift_expressions = [factor_extract(e.args[2], :dt, differentials) for e in equations]
   drift = cat_expressions(drift_expressions)
-  drift_jacobian_expressions = [differentiate(f_i, x_j) for f_i in drift_expressions, x_j in values(model_vars)]
-  drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
+  # drift_jacobian_expressions = [differentiate(f_i, x_j) for f_i in drift_expressions, x_j in values(model_vars)]
+  # drift_jacobian = isempty(drift_jacobian_expressions) ? 0 : cat_expressions(drift_jacobian_expressions)
   diffusion_expressions = [factor_extract(e.args[2], dw, differentials) for e in equations, dw in keys(process_vars)]
   diffusion = isempty(diffusion_expressions) ? 0 : cat_expressions(symbolic_mul(diffusion_expressions, correlation_chol))
   jump_expressions = [factor_extract(e.args[2], dn, differentials) for e in equations, dn in keys(jump_vars)]
@@ -142,7 +142,7 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   append!(blk.args, sde_struct(typename, supertype, length(equations), length(process_vars), parameter_vars, docstring).args)
   append!(blk.args, sde_state_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
   append!(blk.args, corrected_drift_function(typename, collect(values(model_vars)), parameter_vars, drift_expressions, diffusion_expressions).args)
-  append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
+  # append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   append!(blk.args, marked_sde_state_function(typename, :jump, values(model_vars), parameter_vars, mark_vars, jump).args)
   # append!(blk.args, sde_model_function(typename, :variables, parameter_vars, :($(values(model_vars)...))).args)
