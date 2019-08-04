@@ -69,7 +69,7 @@ end
   @test drift(deterministic, t0, 100.0) ≈ 100.0
   @test drift(timedependend, t0, 3.0) ≠ drift(timedependend, t1, 3.0)
   @test drift(timedependend, 4.0, 3.0) ≈ 12
-  @test corrected_drift(m2, t0, s2, 0.65) ≈ drift(m2, t0, s2) - [s2[2]*s2[1]; m2.σ^2/2] * 0.65
+  @test corrected_drift(m2, t0, s2, 0.65) ≈ drift(m2, t0, s2) - [s2[2]*s2[1]+m2.σ*m2.ρ*s2[1]/2; m2.σ^2/2] * 0.65
 end
 
 @testset "diffusion" begin
@@ -91,7 +91,7 @@ end
   @test simulate(deterministic, EulerMaruyama(1.0), t0, 1.0, 5)[1] ≈ [1, 2, 4, 8, 16, 32]
   # @test simulate(deterministic, Milstein(1.0), t0, 1.0, 5)[1] ≈ [1, 2, 4, 8, 16, 32]
 
-  @test size(simulate(SpecialCaseModel1(), EulerMaruyama(0.01), t0, 100.0, 1000)[1]) == (1001,)
+  @test size(simulate(SpecialCaseModel1(), EulerMaruyama(0.01), t0, [100.0], 1000)[1]) == (1,1001,)
   @test size(simulate(SpecialCaseModel2(), EulerMaruyama(0.01), t0, [100.0, 100.0], 1000)[1]) == (2,1001)
   @test size(simulate(SpecialCaseModel3(), EulerMaruyama(0.01), t0, [100.0, 100.0, 100.0], 1000)[1]) == (3,1001)
 end

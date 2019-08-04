@@ -1,4 +1,4 @@
-import Calculus: simplify, differentiate
+import Calculus: simplify
 import DataStructures: OrderedSet, OrderedDict
 using Distributions
 # import Parameters: with_kw
@@ -141,7 +141,7 @@ function sde_model(typename::Symbol, ex::Expr, parameter_vars...)
   blk = Expr(:block)
   append!(blk.args, sde_struct(typename, supertype, length(equations), length(process_vars), parameter_vars, docstring).args)
   append!(blk.args, sde_state_function(typename, :drift, values(model_vars), parameter_vars, drift).args)
-  append!(blk.args, corrected_drift_function(typename, collect(values(model_vars)), parameter_vars, drift_expressions, diffusion_expressions).args)
+  # append!(blk.args, corrected_drift_function(typename, collect(values(model_vars)), parameter_vars, drift_expressions, diffusion_expressions).args)
   # append!(blk.args, sde_state_function(typename, :drift_jacobian, values(model_vars), parameter_vars, drift_jacobian).args)
   append!(blk.args, sde_state_function(typename, :diffusion, values(model_vars), parameter_vars, diffusion).args)
   append!(blk.args, marked_sde_state_function(typename, :jump, values(model_vars), parameter_vars, mark_vars, jump).args)
@@ -261,27 +261,27 @@ function correlation_matrix_extract(equations, process_vars)
   S # note: S is symmetric
 end
 
-function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, drift_equations, diffusion_equations)
-  D = length(model_vars)
-  corrected = Array{Any}(undef, D)
-  for k in 1:D
-    terms = [Expr(:call, :*, f_i, differentiate(f_i, model_vars[k])) for f_i in diffusion_equations[k,:]]
-    sum_terms = Expr(:call, :+, terms...)
-    corrected[k] = simplify(:($(drift_equations[k]) - correction * $sum_terms))
-  end
-  ex = cat_expressions(corrected)
-  replacements = Dict()
-  # if length(model_vars) == 1
-    # push!(replacements, first(model_vars) => :x)
-  # else
-    merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
-  # end
-  merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
-  ex = replace_symbols(ex, replacements)
-  quote
-    function SDEModels.corrected_drift(model::$typename, t::Number, x::S, correction::Number) where S
-      # SDEModels.eltype_promote(eltype(S), $ex)
-      $ex
-    end
-  end
-end
+# function corrected_drift_function(typename::Symbol, model_vars, parameter_vars, drift_equations, diffusion_equations)
+#   D = length(model_vars)
+#   corrected = Array{Any}(undef, D)
+#   for k in 1:D
+#     terms = [Expr(:call, :*, f_i, differentiate(f_i, model_vars[k])) for f_i in diffusion_equations[k,:]]
+#     sum_terms = Expr(:call, :+, terms...)
+#     corrected[k] = simplify(:($(drift_equations[k]) - correction * $sum_terms))
+#   end
+#   ex = cat_expressions(corrected)
+#   replacements = Dict()
+#   # if length(model_vars) == 1
+#     # push!(replacements, first(model_vars) => :x)
+#   # else
+#     merge!(replacements, Dict(j => :(x[$i]) for (i,j) in enumerate(model_vars)))
+#   # end
+#   merge!(replacements, Dict(broadcast(s -> s => :(model.$s), parameter_vars)))
+#   ex = replace_symbols(ex, replacements)
+#   quote
+#     function SDEModels.corrected_drift(model::$typename, t::Number, x::S, correction::Number) where S
+#       # SDEModels.eltype_promote(eltype(S), $ex)
+#       $ex
+#     end
+#   end
+# end

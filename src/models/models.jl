@@ -8,12 +8,26 @@ model_dim(::AbstractSDE{D,M}) where {D,M} = D
 noise_dim(::AbstractSDE{D,M}) where {D,M} = M
 
 function drift end
-function corrected_drift end
 # function drift_jacobian end
 function diffusion end
 function jump end
 function mark_distribution end
 function variables end
+
+_reshape_or_nothing(x::Number, dims) = x
+_reshape_or_nothing(x::AbstractArray, dims) = reshape(x, dims)
+
+function corrected_drift(model::AbstractSDE{D,M}, t0, x0, α) where {D,M}
+  μ = drift(model, t0, x0)
+  σ = diffusion(model, t0, x0)
+  corr = @MArray zeros(D)
+  ∂σ = _reshape_or_nothing(_diffusion_jacobian(model, t0, x0), (D, M, D))
+  # μ - α*vec(sum(permutedims(∂σ, (3,2,1)).*σ, dims=(1,2)))
+  for j=1:M, i=1:D, k=1:D
+    corr[i] += σ[k,j] * ∂σ[i,j,k]
+  end
+  μ - α*corr
+end
 
 include("codegen.jl")
 
