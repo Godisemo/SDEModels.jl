@@ -1,6 +1,7 @@
 module SDEModels
 using Parameters
 using StaticArrays
+using LinearAlgebra
 
 abstract type AbstractSDE{D,M} end
 abstract type JumpSDE{D,M} <: AbstractSDE{D,M} end

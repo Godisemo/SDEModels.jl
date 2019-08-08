@@ -1,5 +1,3 @@
-import LinearAlgebra: I
-
 # ===================================================
 # The following schemes are described in the paper
 #   Weak exponential schemes for stochastic
