@@ -47,6 +47,12 @@ end
   dW1*dW2 = ρ*dt
 end
 
+@sde_model Lorenz begin
+  dx = σ*(y-x)*dt + σ1*dw1
+  dy = (x*(ρ-z)-y)*dt + σ2*dw2
+  dz = (x*y-β*z)*dt + σ3*dw3
+end
+
 @sde_model Bates begin
   dS =     α*S*dt + sqrt(V)*S*dW1 + S*(ξ-1.0)*dN
   dV = κ*(θ-V)*dt + σ*sqrt(V)*dW2
