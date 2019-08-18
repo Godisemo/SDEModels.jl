@@ -1,7 +1,7 @@
 name = "SDEModels"
 uuid = "18709ec8-a215-11e8-24aa-d9e9f5c70668"
 authors = ["Godisemo <carl.akerlindh@gmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Calculus = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
